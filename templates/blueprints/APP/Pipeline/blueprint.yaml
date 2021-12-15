@@ -1,0 +1,33 @@
+formatVersion: 1
+name: '[APP] Pipeline'
+version: 1
+inputs:
+  kubernetes:
+    type: string
+    title: Kubernetes
+  name:
+    type: string
+    title: Name
+  persistence:
+    type: boolean
+    title: Persistence
+    default: false
+  pipeConfig:
+    type: string
+    title: Configuration
+  manifest:
+    type: string
+    title: Manifest
+resources:
+  namespace:
+    type: Custom.Pipeline
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      kubernetes: '${input.kubernetes}'
+      name: '${input.name}'
+      persistence: '${input.persistence}'
+      manifest: '${input.manifest}'
+      pipeConfig: '${input.pipeConfig}'

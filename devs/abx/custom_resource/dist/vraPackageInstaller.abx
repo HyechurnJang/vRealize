@@ -1,0 +1,14 @@
+---
+exportVersion: "1"
+name: "vraPackageInstaller"
+runtime: "python"
+entrypoint: "handler"
+timeoutSeconds: 600
+deploymentTimeoutSeconds: 900
+actionType: "SCRIPT"
+memoryInMB: 300
+inputs:
+  vraHostname: ""
+  vraPassword: ""
+  vraUsername: ""
+  vraProject: ""

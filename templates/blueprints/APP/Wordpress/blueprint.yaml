@@ -1,0 +1,222 @@
+formatVersion: 1
+name: '[APP] Wordpress'
+version: 1
+inputs:
+  compute:
+    type: string
+    title: Compute
+  computeType:
+    type: string
+    title: Compute Type
+  webCluster:
+    type: number
+    title: Web Cluster
+    minimum: 1
+    maximum: 3
+    default: 1
+  webFlavor:
+    type: string
+    title: Web Flavor
+  webNet:
+    type: string
+    title: Web Network
+  webAddr:
+    type: string
+    title: Web Address
+    default: ''
+  dbFlavor:
+    type: string
+    title: DB Flavor
+  dbNet:
+    type: string
+    title: DB Network
+  dbAddr:
+    type: string
+    title: DB Address
+    default: ''
+  version:
+    type: string
+    enum:
+      - 5.2.4
+      - 5.7.2
+    default: 5.7.2
+    title: Version
+  username:
+    type: string
+    title: Username
+  password:
+    type: string
+    encrypted: true
+    title: Password
+  passwordConfirm:
+    type: string
+    encrypted: true
+    title: Password Confirm
+resources:
+  lb:
+    type: Cloud.LoadBalancer
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      name: wp-lb
+      network: '${resource.webNet.id}'
+      instances: '${resource.web[*].id}'
+      internetFacing: '${input.computeType=="vmw"?"false":"true"}'
+      address: '${input.computeType=="vmw"&&input.webAddr!=""?input.webAddr:null}'
+      routes:
+        - protocol: HTTP
+          port: '80'
+          instanceProtocol: HTTP
+          instancePort: '80'
+          healthCheckConfiguration:
+            protocol: TCP
+            port: '80'
+            intervalSeconds: 10
+            timeoutSeconds: 5
+            unhealthyThreshold: 3
+            healthyThreshold: 2
+  web:
+    type: Cloud.Machine
+    dependsOn:
+      - db
+    metadata:
+      layoutPosition:
+        - 0
+        - 1
+    properties:
+      count: '${input.webCluster}'
+      image: ubuntu20
+      flavor: '${input.webFlavor}'
+      constraints:
+        - tag: '${input.compute}'
+      networks:
+        - network: '${resource.webNet.id}'
+          assignment: '${input.computeType=="vmw"?"static":"dynamic"}'
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: ${input.username}
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            groups: adm, sudo, wheel, users
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAi/KwSSOccFcKrtavBQuNtvp8o7HX/iJGb/t1P8zCUkfjL7FFkVh7wnzvstPU49r5rxnp6umWJ5vXM2ImzJXVjePDcWtvRK4z3JIHJt275NHqlc0ETJrFNMD5B+Ad8yX1+pXEavK92mDvIapPC2e4HowQVoU+nDoJrOmZHduNcy1ZV62fLAzCaWwdTjFWng9ggZGIEdmT43I5nAaRYd9rkX0SZPciSoEA/CPliilNwcnUxBXMxZtauKc+3uuniQNMt5EpjQHVT8+206ysa0GUhwKbKg1av30tcmXLX7vJ5CzbZMjRzE9iztK688MetHnzMe/j8+Sm/bOPL+sa2zInlQ==
+            lock_passwd: false
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: False
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+         - nfs-common
+         - apache2
+         - php
+         - php-gd
+         - php-xml
+         - php-zip
+         - php-curl
+         - php-intl
+         - php-soap
+         - php-mysql
+         - php-xmlrpc
+         - php-mbstring
+         - libapache2-mod-php
+        write_files:
+          - path: /opt/init.sh
+            permissions: '0744'
+            owner: root:root
+            content: |
+              #!/bin/bash
+              RETRY_ERR_COUNT=10; RETRY_CON_COUNT=12; RETRY_DELAY=5
+              set +e; for((i=1;i<=$RETRY_ERR_COUNT;i+=1)); do SYNC_MSG=`curl -s -S --retry $RETRY_CON_COUNT --retry-delay $RETRY_DELAY --retry-connrefused ${db.address}:200`; [ `echo $?` == 0 ] && break; echo "Retry $i"; done; set -e
+              rm -rf /var/www/html/*
+              echo "${db.address}:/wordpress    /var/www/html    nfs    defaults    0    0" >> /etc/fstab
+              mount -a
+              sed -i -e "s/localhost/${db.address}/g" /var/www/html/wp-config.php
+              service apache2 reload
+        runcmd:
+          - /opt/init.sh
+          - rm -rf /opt/init.sh
+  db:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 0
+        - 2
+    properties:
+      image: ubuntu20
+      flavor: '${input.dbFlavor}'
+      constraints:
+        - tag: '${input.compute}'
+      networks:
+        - network: '${resource.dbNet.id}'
+          assignment: '${input.computeType=="vmw"?"static":"dynamic"}'
+          address: '${input.computeType=="vmw"&&input.dbAddr!=""?input.dbAddr:null}'
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: ${input.username}
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            groups: adm, sudo, wheel, users
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAi/KwSSOccFcKrtavBQuNtvp8o7HX/iJGb/t1P8zCUkfjL7FFkVh7wnzvstPU49r5rxnp6umWJ5vXM2ImzJXVjePDcWtvRK4z3JIHJt275NHqlc0ETJrFNMD5B+Ad8yX1+pXEavK92mDvIapPC2e4HowQVoU+nDoJrOmZHduNcy1ZV62fLAzCaWwdTjFWng9ggZGIEdmT43I5nAaRYd9rkX0SZPciSoEA/CPliilNwcnUxBXMxZtauKc+3uuniQNMt5EpjQHVT8+206ysa0GUhwKbKg1av30tcmXLX7vJ5CzbZMjRzE9iztK688MetHnzMe/j8+Sm/bOPL+sa2zInlQ==
+            lock_passwd: false
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: False
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+         - nfs-kernel-server
+         - mysql-server
+        write_files:
+          - path: /opt/init.sh
+            permissions: '0744'
+            owner: root:root
+            content: |
+              #!/bin/bash
+              mkdir -p /wordpress
+              cd /wordpress && wget https://wordpress.org/wordpress-${input.version}.tar.gz && tar -xzf /wordpress/wordpress-${input.version}.tar.gz -C /wordpress --strip-components 1
+              mv /wordpress/wp-config-sample.php /wordpress/wp-config.php
+              sed -i -e "s/database_name_here/wordpress/g" /wordpress/wp-config.php
+              sed -i -e "s/username_here/${input.username}/g" /wordpress/wp-config.php
+              sed -i -e "s/password_here/${input.password}/g" /wordpress/wp-config.php
+              echo "define('FS_METHOD', 'direct');" >> /wordpress/wp-config.php
+              chown -R www-data:www-data /wordpress
+              echo "/wordpress    *(rw,async,no_root_squash,no_subtree_check)" > /etc/exports
+              exportfs -a
+              systemctl restart nfs-kernel-server
+              sed -e '/bind-address/ s/^#*/#/' -i /etc/mysql/mysql.conf.d/mysqld.cnf
+              mysql -u root -e "create user '${input.username}'@'%' identified by '${input.password}'; create database wordpress character set utf8; grant all privileges on wordpress.* to '${input.username}'@'%' with grant option; flush privileges;"
+              service mysql restart
+              while true; do echo "OK" | nc -q 0 -l 200 2>&1>/dev/null; done &
+        runcmd:
+          - /opt/init.sh
+          - rm -rf /opt/init.sh
+  webNet:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.webNet}'
+  dbNet:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.dbNet}'

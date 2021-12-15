@@ -1,0 +1,445 @@
+formatVersion: 1
+name: '[CSP] Self Service VM'
+version: 1
+inputs:
+  compute:
+    type: string
+    title: Compute
+  computeType:
+    type: string
+    title: Compute Type
+  vms:
+    type: number
+    title: VMs
+    minimum: 1
+    default: 1
+  image:
+    type: string
+    title: Image
+  flavor:
+    type: string
+    title: Flavor
+  networks:
+    type: number
+    title: Networks
+    minimum: 1
+    maximum: 3
+    default: 1
+  net1:
+    type: string
+    title: Network 1
+  addr1:
+    type: string
+    title: Address 1
+    default: ''
+  fw1:
+    type: array
+    title: Network 1 FW
+    default: []
+    items:
+      type: object
+      title: Rule
+      properties:
+        name:
+          type: string
+          title: Name
+        direction:
+          type: string
+          title: Direction
+          oneOf:
+            - title: IN
+              const: inbound
+            - title: OUT
+              const: outbound
+        source:
+          type: string
+          title: Source
+        destination:
+          type: string
+          title: Destination
+        protocol:
+          type: string
+          title: Protocol
+          enum:
+            - ANY
+            - ICMP
+            - TCP
+            - UDP
+        ports:
+          type: string
+          title: Ports
+        access:
+          type: string
+          title: Access
+          oneOf:
+            - title: ALLOW
+              const: Allow
+            - title: DROP
+              const: Drop
+            - title: DENY
+              const: Deny
+  net2:
+    type: string
+    title: Network 2
+    default: ''
+  addr2:
+    type: string
+    title: Address 2
+    default: ''
+  fw2:
+    type: array
+    title: Network 2 FW
+    default: []
+    items:
+      type: object
+      title: Rule
+      properties:
+        name:
+          type: string
+          title: Name
+        direction:
+          type: string
+          title: Direction
+          oneOf:
+            - title: IN
+              const: inbound
+            - title: OUT
+              const: outbound
+        source:
+          type: string
+          title: Source
+        destination:
+          type: string
+          title: Destination
+        protocol:
+          type: string
+          title: Protocol
+          enum:
+            - ANY
+            - ICMP
+            - TCP
+            - UDP
+        ports:
+          type: string
+          title: Ports
+        access:
+          type: string
+          title: Access
+          oneOf:
+            - title: ALLOW
+              const: Allow
+            - title: DROP
+              const: Drop
+            - title: DENY
+              const: Deny
+  net3:
+    type: string
+    title: Network 3
+    default: ''
+  addr3:
+    type: string
+    title: Address 3
+    default: ''
+  fw3:
+    type: array
+    title: Network 3 FW
+    default: []
+    items:
+      type: object
+      title: Rule
+      properties:
+        name:
+          type: string
+          title: Name
+        direction:
+          type: string
+          title: Direction
+          oneOf:
+            - title: IN
+              const: inbound
+            - title: OUT
+              const: outbound
+        source:
+          type: string
+          title: Source
+        destination:
+          type: string
+          title: Destination
+        protocol:
+          type: string
+          title: Protocol
+          enum:
+            - ANY
+            - ICMP
+            - TCP
+            - UDP
+        ports:
+          type: string
+          title: Ports
+        access:
+          type: string
+          title: Access
+          oneOf:
+            - title: ALLOW
+              const: Allow
+            - title: DROP
+              const: Drop
+            - title: DENY
+              const: Deny
+  lbAddr:
+    type: string
+    title: Load Balancer Address
+    default: ''
+  lb:
+    type: array
+    title: Load Balancer
+    default: []
+    items:
+      type: object
+      title: Virtual Server
+      properties:
+        protocol:
+          type: string
+          title: Front End Protocol
+          enum:
+            - TCP
+            - HTTP
+            - HTTPS
+        port:
+          type: number
+          title: Front End Port
+          default: 80
+          minimum: 1
+          maximum: 65535
+        instanceProtocol:
+          type: string
+          title: Back End Protocol
+          enum:
+            - TCP
+            - HTTP
+            - HTTPS
+        instancePort:
+          type: number
+          title: Back End Port
+          default: 80
+          minimum: 1
+          maximum: 65535
+        algorithm:
+          type: string
+          title: Algorithm
+          enum:
+            - ROUND_ROBIN
+            - WEIGHTED_ROUND_ROBIN
+            - LEAST_CONNECTION
+            - WEIGHTED_LEAST_CONNECTION
+            - IP_HASH
+            - URI
+            - URL
+            - HTTP_HEADER
+        healthCheckConfiguration:
+          type: object
+          title: Health Check
+          properties:
+            protocol:
+              type: string
+              title: Health Check Protocol
+              enum:
+                - TCP
+                - HTTP
+                - HTTPS
+            port:
+              type: number
+              title: Health Check Port
+              default: 80
+              minimum: 1
+              maximum: 65535
+            urlPath:
+              type: string
+              title: Health Check URL
+            intervalSeconds:
+              type: number
+              title: Interval Seconds
+              default: 10
+              minimum: 5
+            timeoutSeconds:
+              type: number
+              title: Timeout Seconds
+              default: 5
+              minimum: 5
+            healthyThreshold:
+              type: number
+              title: Healthy Threshold
+              default: 3
+              minimum: 1
+            unhealthyThreshold:
+              type: number
+              title: Unhealthy Threshold
+              default: 3
+              minimum: 1
+  disks:
+    type: array
+    title: Disks
+    default: []
+    maxItems: 3
+    items:
+      type: object
+      title: Disk
+      properties:
+        size:
+          type: number
+          title: Size
+          minimum: 1
+          maximum: 2048
+  packageUpdate:
+    type: boolean
+    title: Package Update
+    default: false
+  packageUpgrade:
+    type: boolean
+    title: Package Upgrade
+    default: false
+  packages:
+    type: array
+    title: Packages
+    default: []
+    items:
+      type: string
+  bootScripts:
+    type: string
+    title: Boot Scripts
+    default: ''
+  installScripts:
+    type: string
+    title: Install Scripts
+    default: ''
+  configureScripts:
+    type: string
+    title: Configure Scripts
+    default: ''
+  destroyScripts:
+    type: string
+    title: Destroy Scripts
+    default: ''
+  username:
+    type: string
+    title: Username
+  password:
+    type: string
+    encrypted: true
+    title: Password
+  passwordConfirm:
+    type: string
+    encrypted: true
+    title: Password Confirm
+resources:
+  fw1:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      count: '${length(input.fw1)>=1?1:0}'
+      rules: '${input.fw1}'
+  fw2:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      count: '${input.networks>=2&&length(input.fw2)>=1?1:0}'
+      rules: '${input.fw2}'
+  fw3:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      count: '${input.networks>=3&&length(input.fw3)>=1?1:0}'
+      rules: '${input.fw3}'
+  lb:
+    type: Cloud.LoadBalancer
+    properties:
+      count: '${length(input.lb)>=1?1:0}'
+      address: '${input.lbAddr!=""?input.lbAddr:null}'
+      routes: '${input.lb}'
+      network: '${resource.net1.id}'
+      instances: '${resource.vm[*].id}'
+      internetFacing: '${input.computeType=="vmw"?"false":"true"}'
+  vm:
+    type: Cloud.Machine
+    properties:
+      count: '${input.vms}'
+      image: '${input.image}'
+      flavor: '${input.flavor}'
+      constraints:
+        - tag: '${input.compute}'
+      networks: '${[{"network":resource.net1.id,"assignment":"static","address":(input.addr1!=""?input.addr1:null),"securityGroups":resource.fw1[*].id,"deviceIndex":0}]+[input.networks>=2?{"network":resource.net2[*].id[0],"assignment":"static","address":(input.addr2!=""?input.addr2:null),"securityGroups":resource.fw2[*].id,"deviceIndex":1}:null]+[input.networks>=3?{"network":resource.net3[*].id[0],"assignment":"static","address":(input.addr3!=""?input.addr3:null),"securityGroups":resource.fw3[*].id,"deviceIndex":2}:null]}'
+      attachedDisks: '${map_to_object(resource.disk1[*].id, "source") + map_to_object(resource.disk2[*].id, "source") + map_to_object(resource.disk3[*].id, "source")}'
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: ${input.username}
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            groups: adm, sudo, wheel, users
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAi/KwSSOccFcKrtavBQuNtvp8o7HX/iJGb/t1P8zCUkfjL7FFkVh7wnzvstPU49r5rxnp6umWJ5vXM2ImzJXVjePDcWtvRK4z3JIHJt275NHqlc0ETJrFNMD5B+Ad8yX1+pXEavK92mDvIapPC2e4HowQVoU+nDoJrOmZHduNcy1ZV62fLAzCaWwdTjFWng9ggZGIEdmT43I5nAaRYd9rkX0SZPciSoEA/CPliilNwcnUxBXMxZtauKc+3uuniQNMt5EpjQHVT8+206ysa0GUhwKbKg1av30tcmXLX7vJ5CzbZMjRzE9iztK688MetHnzMe/j8+Sm/bOPL+sa2zInlQ==
+            lock_passwd: false
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: False
+        ssh_pwauth: true
+        package_update: ${input.packageUpdate==true?"true":"false"}
+        package_upgrade: ${input.packageUpgrade==true?"true":"false"}
+        packages: ${input.packages}
+        runcmd:
+          - echo "${base64_encode(input.bootScripts)}" | base64 -d | tee /tmp/init.sh
+          - chmod 755 /tmp/init.sh
+          - /tmp/init.sh > /tmp/init.log
+          - rm -rf /tmp/init.sh
+  scripts:
+    type: Custom.Script
+    properties:
+      count: '${input.installScripts!=""||input.configureScripts!=""||input.destroyScripts!=""?1:0}'
+      instances: '${resource.vm[*].id}'
+      username: '${input.username}'
+      password: '${input.password}'
+      install: '${input.installScripts}'
+      configure: '${input.configureScripts}'
+      destroy: '${input.destroyScripts}'
+  net1:
+    type: Cloud.Network
+    properties:
+      networkType: '${contains(input.net1,"routed")?"routed":(contains(input.net1,"outbound")?"outbound":"existing")}'
+      constraints:
+        - tag: '${input.net1}'
+  net2:
+    type: Cloud.Network
+    properties:
+      networkType: '${contains(input.net2,"routed")?"routed":(contains(input.net2,"outbound")?"outbound":"existing")}'
+      constraints:
+        - tag: '${input.net2}'
+      count: '${input.networks>=2?1:0}'
+  net3:
+    type: Cloud.Network
+    properties:
+      networkType: '${contains(input.net3,"routed")?"routed":(contains(input.net3,"outbound")?"outbound":"existing")}'
+      constraints:
+        - tag: '${input.net3}'
+      count: '${input.networks>=3?1:0}'
+  disk1:
+    type: Cloud.Volume
+    properties:
+      count: '${length(input.disks)>=1?1:0}'
+      capacityGb: '${input.disks[0].size}'
+      SCSIController: SCSI_Controller_1
+      unitNumber: 0
+  disk2:
+    type: Cloud.Volume
+    properties:
+      count: '${length(input.disks)>=2?1:0}'
+      capacityGb: '${input.disks[1].size}'
+      SCSIController: SCSI_Controller_1
+      unitNumber: 1
+  disk3:
+    type: Cloud.Volume
+    properties:
+      count: '${length(input.disks)>=3?1:0}'
+      capacityGb: '${input.disks[2].size}'
+      SCSIController: SCSI_Controller_1
+      unitNumber: 2

@@ -1,0 +1,35 @@
+formatVersion: 1
+name: '[TEST] Basic On Demand Network'
+version: 1
+inputs: {}
+resources:
+  gw:
+    type: Cloud.NSX.Gateway
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      networks:
+        - '${resource.net1.id}'
+        - '${resource.net2.id}'
+  net1:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      networkType: routed
+      constraints:
+        - tag: 'network:routed'
+  net2:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      networkType: routed
+      constraints:
+        - tag: 'network:routed'

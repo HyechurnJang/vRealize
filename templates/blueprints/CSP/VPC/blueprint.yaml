@@ -1,0 +1,66 @@
+formatVersion: 1
+name: '[CSP] VPC'
+version: 1
+inputs:
+  name:
+    type: string
+    title: Name
+  networkType:
+    type: string
+    title: Network Type
+    default: outbound
+    oneOf:
+      - title: Private Route
+        const: outbound
+      - title: Global Route
+        const: routed
+  outboundNetworks:
+    type: array
+    title: Networks
+    default: []
+    maxItems: 5
+    items:
+      type: object
+      title: Network
+      properties:
+        name:
+          type: string
+          title: Name
+        cidr:
+          type: string
+          title: Subnet CIDR
+  routedNetworks:
+    type: array
+    title: Networks
+    default: []
+    maxItems: 5
+    items:
+      type: object
+      title: Network
+      properties:
+        name:
+          type: string
+          title: Name
+  loadBalancer:
+    type: boolean
+    title: Load Balancer
+    default: false
+resources:
+  tenant:
+    type: Custom.Deployment
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      name: '[CSP] VPCADM : ${input.name} BY ${env.requestedBy}'
+      projectName: VPCADM
+      contentType: blueprint
+      contentName: '[CSP] VPCADM'
+      inputs: |
+        name: ${input.name}
+        owner: ${env.requestedBy}
+        networkType: ${input.networkType}
+        outboundNetworks: ${input.networkType=="outbound"?to_json(input.outboundNetworks):null}
+        routedNetworks: ${input.networkType=="routed"?to_json(input.routedNetworks):null}
+        loadBalancer: ${input.loadBalancer}

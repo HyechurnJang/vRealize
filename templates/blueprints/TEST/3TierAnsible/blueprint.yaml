@@ -1,0 +1,111 @@
+formatVersion: 1
+name: '[TEST] 3Tier Ansible'
+version: 1
+inputs: {}
+resources:
+  nginx:
+    type: Cloud.Ansible
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      host: '${resource.web.*}'
+      osType: linux
+      account: ansible.vmkloud.com
+      username: root
+      password: VMware1!
+      inventoryFile: '/opt/ansible/hosts/${env.projectName}-${env.requestedBy}/hosts'
+      groups:
+        - nginx
+      playbooks:
+        provision:
+          - /opt/ansible/playbook/nginx.yaml
+  tomcat:
+    type: Cloud.Ansible
+    metadata:
+      layoutPosition:
+        - 0
+        - 1
+    properties:
+      host: '${resource.was.*}'
+      osType: linux
+      account: ansible.vmkloud.com
+      username: root
+      password: VMware1!
+      inventoryFile: '/opt/ansible/hosts/${env.projectName}-${env.requestedBy}/hosts'
+      groups:
+        - tomcat
+      playbooks:
+        provision:
+          - /opt/ansible/playbook/tomcat.yaml
+  mysql:
+    type: Cloud.Ansible
+    metadata:
+      layoutPosition:
+        - 0
+        - 2
+    properties:
+      host: '${resource.db.*}'
+      osType: linux
+      account: ansible.vmkloud.com
+      username: root
+      password: VMware1!
+      inventoryFile: '/opt/ansible/hosts/${env.projectName}-${env.requestedBy}/hosts'
+      groups:
+        - mysql
+      playbooks:
+        provision:
+          - /opt/ansible/playbook/mariadb.yaml
+  web:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+  was:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 1
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+  db:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 2
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+  net:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'network:test'

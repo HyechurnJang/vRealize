@@ -1,0 +1,94 @@
+formatVersion: 1
+name: '[TEST] 3Tier Cloud Init'
+version: 1
+inputs: {}
+resources:
+  web:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      cloudConfig: |
+        #cloud-config
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+          - nginx
+        runcmd:
+          - systemctl restart nginx
+  was:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 1
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      cloudConfig: |
+        #cloud-config
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+          - openjdk-14-jdk
+          - tomcat9
+        write_files:
+          - path: /opt/init.sh
+            permissions: '0744'
+            owner: root:root
+            content: |
+              #!/bin/bash
+              echo 'JAVA_HOME=/usr/lib/jvm/java-14-openjdk-amd64/bin' >> /etc/default/tomcat9
+              systemctl restart tomcat9
+        runcmd:
+          - /opt/init.sh
+          - rm -rf /opt/init.sh
+  db:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 2
+    properties:
+      image: ubuntu20
+      flavor: medium
+      constraints:
+        - tag: 'compute:vmw01'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      cloudConfig: |
+        #cloud-config
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+          - mariadb-server
+        runcmd:
+          - systemctl restart mysql
+  net:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'network:test'

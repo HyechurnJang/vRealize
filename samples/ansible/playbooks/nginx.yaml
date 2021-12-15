@@ -1,0 +1,9 @@
+---
+- hosts: nginx
+  tasks:
+    - name: install nginx
+      apt: name=nginx update_cache=yes state=latest
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted

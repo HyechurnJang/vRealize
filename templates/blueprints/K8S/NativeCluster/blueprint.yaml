@@ -1,0 +1,334 @@
+formatVersion: 1
+name: '[K8S] Native Cluster'
+version: 1
+inputs:
+  name:
+    type: string
+    title: Name
+  compute:
+    type: string
+    title: Compute
+  computeType:
+    type: string
+    title: Compute Type
+  masterFlavor:
+    type: string
+    title: Master Flavor
+  masterAddr:
+    type: string
+    title: Master Address
+    default: ''
+  workerCluster:
+    type: number
+    title: Worker Cluster
+    minimum: 1
+    maximum: 3
+    default: 1
+  workerFlavor:
+    type: string
+    title: Worker Flavor
+  network:
+    type: string
+    title: Network
+  cni:
+    type: string
+    enum:
+      - flannel
+      - calico
+    default: calico
+    title: CNI Plugin
+  version:
+    type: string
+    title: Version
+    oneOf:
+      - title: 1.17.14
+        const: 1.17.14-00
+      - title: 1.18.10
+        const: 1.18.10-00
+      - title: 1.19.4
+        const: 1.19.4-00
+      - title: latest
+        const: latest
+    default: 1.19.4-00
+  username:
+    type: string
+    title: Username
+  password:
+    type: string
+    encrypted: true
+    title: Password
+  passwordConfirm:
+    type: string
+    encrypted: true
+    title: Password Confirm
+resources:
+  endpoint:
+    type: Custom.Kubernetes
+    dependsOn:
+      - kube_worker
+      - kube_config
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      projectName: '${env.projectName}'
+      name: '${env.projectName}-${input.name}'
+      kubeConfig: '${resource.kube_config.result.output}'
+      address: '${resource.master.address}'
+  kube_config:
+    type: Custom.Script
+    dependsOn:
+      - kube_master
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      instances:
+        - '${resource.master.id}'
+      username: '${input.username}'
+      password: '${input.password}'
+      install: |
+        sudo cat /root/.kube/config >> $Output
+  kube_master:
+    type: Custom.Script
+    dependsOn:
+      - ssl_cert
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      instances:
+        - '${resource.master.id}'
+      username: '${input.username}'
+      password: '${input.password}'
+      install: |
+        # cni plugin
+        KUBE_CNI="${input.cni}"
+        POD_NETWORK_CIDR="10.244.0.0/16"
+        if [ "$KUBE_CNI" == "calico" ]; then
+        CNI_SOURCE="https://docs.projectcalico.org/manifests/calico.yaml"
+        elif [ "$KUBE_CNI" == "flannel" ]; then
+        CNI_SOURCE="https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml"
+        else
+        KUBE_CNI="calico"
+        CNI_SOURCE="https://docs.projectcalico.org/manifests/calico.yaml"
+        fi
+        # install Packages
+        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        curl https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+        sudo apt update && sudo apt upgrade -y
+        sudo apt install docker-ce -y
+        ${input.version=="latest"?"sudo apt install -y kubelet kubeadm kubectl":"sudo apt install -y kubelet=" + input.version + " kubeadm=" + input.version + " kubectl=" + input.version}
+        sudo swapoff -a
+        sudo sed -i '/swap/d' /etc/fstab
+        # init kubernetes
+        sudo -H kubeadm init --pod-network-cidr="$POD_NETWORK_CIDR" --apiserver-advertise-address="0.0.0.0" --apiserver-cert-extra-sans="${resource.master.address},${resource.master.networks[0].address}"
+        sudo mkdir -p /root/.kube /home/${input.username}/.kube
+        sudo cp -i /etc/kubernetes/admin.conf /root/.kube/config
+        sudo cp -i /etc/kubernetes/admin.conf /home/${input.username}/.kube/config
+        sudo chown root:root /root/.kube/config
+        sudo chown -R ${input.username}:${input.username} /home/${input.username}/.kube
+        # start cni
+        sudo -H kubectl apply -f "$CNI_SOURCE"
+        # start cadvisor
+        sudo -H kubectl apply -f /tmp/cadvisor.yaml
+        # get join command
+        sudo -H kubeadm token create --print-join-command >> $Output
+  ssl_cert:
+    type: Custom.Cert
+    dependsOn:
+      - master
+      - worker
+    metadata:
+      layoutPosition:
+        - 2
+        - 1
+    properties:
+      instances: '${[resource.master.id] + resource.worker[*].id}'
+      username: '${input.username}'
+      password: '${input.password}'
+  kube_worker:
+    type: Custom.Script
+    dependsOn:
+      - ssl_cert
+      - kube_master
+    metadata:
+      layoutPosition:
+        - 2
+        - 2
+    properties:
+      instances: '${resource.worker[*].id}'
+      username: '${input.username}'
+      password: '${input.password}'
+      install: |
+        # install Packages
+        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        curl https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+        sudo apt update && sudo apt upgrade -y
+        sudo apt install docker-ce -y
+        ${input.version=="latest"?"sudo apt install -y kubelet kubeadm kubectl":"sudo apt install -y kubelet=" + input.version + " kubeadm=" + input.version + " kubectl=" + input.version}
+        sudo swapoff -a
+        sudo sed -i '/swap/d' /etc/fstab
+        # join kubernetes
+        sudo -H ${resource.kube_master.result.output}
+        echo "${resource.master.networks[0].address} master" | sudo tee -a /etc/hosts
+      destroy: |
+        ssh master sudo -H kubectl drain --ignore-daemonsets --force $(hostname)
+        ssh master sudo -H kubectl delete node --force $(hostname)
+  master:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 3
+        - 0
+    properties:
+      image: ubuntu20
+      flavor: '${input.masterFlavor}'
+      constraints:
+        - tag: '${input.compute}'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      cloudConfigSettings: '${input.computeType!="vmw"?{"phoneHomeShouldWait":true,"phoneHomeTimeoutSeconds":60,"phoneHomeFailOnTimeout":false}:null}'
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: ${input.username}
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            groups: adm, sudo, wheel, users
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAi/KwSSOccFcKrtavBQuNtvp8o7HX/iJGb/t1P8zCUkfjL7FFkVh7wnzvstPU49r5rxnp6umWJ5vXM2ImzJXVjePDcWtvRK4z3JIHJt275NHqlc0ETJrFNMD5B+Ad8yX1+pXEavK92mDvIapPC2e4HowQVoU+nDoJrOmZHduNcy1ZV62fLAzCaWwdTjFWng9ggZGIEdmT43I5nAaRYd9rkX0SZPciSoEA/CPliilNwcnUxBXMxZtauKc+3uuniQNMt5EpjQHVT8+206ysa0GUhwKbKg1av30tcmXLX7vJ5CzbZMjRzE9iztK688MetHnzMe/j8+Sm/bOPL+sa2zInlQ==
+            lock_passwd: false
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: False
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        write_files:
+          - path: /tmp/cadvisor.yaml
+            permissions: '0600'
+            owner: root:root
+            content: |
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: cadvisor
+                namespace: kube-system 
+                labels:
+                  app: cadvisor
+                annotations:
+                    seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
+              spec:
+                selector:
+                  matchLabels:
+                    app: cadvisor
+                template:
+                  metadata:
+                    labels:
+                      app: cadvisor
+                      version: v0.31.0
+                  spec:
+                    tolerations:
+                    - key: node-role.kubernetes.io/master
+                      effect: NoSchedule
+                    containers:
+                    - name: cadvisor
+                      image: google/cadvisor:v0.31.0
+                      resources:
+                        requests:
+                          memory: 250Mi
+                          cpu: 250m
+                        limits:
+                          cpu: 400m
+                      volumeMounts:
+                      - name: rootfs
+                        mountPath: /rootfs
+                        readOnly: true
+                      - name: var-run
+                        mountPath: /var/run
+                        readOnly: true
+                      - name: sys
+                        mountPath: /sys
+                        readOnly: true
+                      - name: docker
+                        mountPath: /var/lib/docker  #Mouting Docker volume  
+                        readOnly: true
+                      - name: disk
+                        mountPath: /dev/disk
+                        readOnly: true
+                      ports:
+                        - name: http
+                          containerPort: 8080 #Port exposed 
+                          hostPort : 31194 #Host's port - Port to expose your cAdvisor DaemonSet on each node
+                          protocol: TCP
+                    automountServiceAccountToken: false
+                    terminationGracePeriodSeconds: 30
+                    volumes:
+                    - name: rootfs
+                      hostPath:
+                        path: /
+                    - name: var-run
+                      hostPath:
+                        path: /var/run
+                    - name: sys
+                      hostPath:
+                        path: /sys
+                    - name: docker
+                      hostPath:
+                        path: /var/lib/docker #Docker path in Host System
+                    - name: disk
+                      hostPath:
+                        path: /dev/disk
+  worker:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 3
+        - 2
+    properties:
+      image: ubuntu20
+      flavor: '${input.workerFlavor}'
+      count: '${input.workerCluster}'
+      constraints:
+        - tag: '${input.compute}'
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      cloudConfigSettings: '${input.computeType!="vmw"?{"phoneHomeShouldWait":true,"phoneHomeTimeoutSeconds":60,"phoneHomeFailOnTimeout":false}:null}'
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: ${input.username}
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            groups: adm, sudo, wheel, users
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAi/KwSSOccFcKrtavBQuNtvp8o7HX/iJGb/t1P8zCUkfjL7FFkVh7wnzvstPU49r5rxnp6umWJ5vXM2ImzJXVjePDcWtvRK4z3JIHJt275NHqlc0ETJrFNMD5B+Ad8yX1+pXEavK92mDvIapPC2e4HowQVoU+nDoJrOmZHduNcy1ZV62fLAzCaWwdTjFWng9ggZGIEdmT43I5nAaRYd9rkX0SZPciSoEA/CPliilNwcnUxBXMxZtauKc+3uuniQNMt5EpjQHVT8+206ysa0GUhwKbKg1av30tcmXLX7vJ5CzbZMjRzE9iztK688MetHnzMe/j8+Sm/bOPL+sa2zInlQ==
+            lock_passwd: false
+        chpasswd:
+          list: |
+            ${input.username}:${input.password}
+          expire: False
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+  net:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 4
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: '${input.network}'

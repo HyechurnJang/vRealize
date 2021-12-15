@@ -1,0 +1,41 @@
+formatVersion: 1
+name: '[TEST] CICD'
+version: 1
+inputs:
+  commit:
+    type: string
+    title: Commit ID
+    default: ''
+resources:
+  script:
+    type: Custom.Script
+    properties:
+      instances:
+        - '${resource.vm.id}'
+      username: root
+      password: VMware1!
+      install: |
+        apt install -y apache2
+        rm -rf /var/www/html/index.html
+        cd /opt && git clone https://github.com/HyechurnJang/vRealize
+        ln -s /opt/vRealize/samples/cicd/index.html /var/www/html/index.html
+      configure: |
+        # ${input.commit}
+        cd /opt/vRealize && git pull
+  vm:
+    type: Cloud.Machine
+    properties:
+      image: ubuntu20
+      flavor: medium
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+          address: 192.168.0.30
+      constraints:
+        - tag: 'compute:vmw01'
+  net:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'network:static'

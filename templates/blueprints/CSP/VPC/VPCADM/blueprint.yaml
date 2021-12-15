@@ -1,0 +1,218 @@
+formatVersion: 1
+name: '[CSP] VPCADM'
+version: 1.4
+inputs:
+  name:
+    type: string
+    title: Name
+  owner:
+    type: string
+    title: Owner
+  networkType:
+    type: string
+    title: Network Type
+    default: outbound
+    oneOf:
+      - title: Private Route
+        const: outbound
+      - title: Global Route
+        const: routed
+  outboundNetworks:
+    type: array
+    title: Networks
+    default: []
+    maxItems: 5
+    items:
+      type: object
+      title: Network
+      properties:
+        name:
+          type: string
+          title: Name
+        cidr:
+          type: string
+          title: Subnet CIDR
+  routedNetworks:
+    type: array
+    title: Networks
+    default: []
+    maxItems: 5
+    items:
+      type: object
+      title: Network
+      properties:
+        name:
+          type: string
+          title: Name
+  loadBalancer:
+    type: boolean
+    title: Load Balancer
+    default: false
+resources:
+  project:
+    type: Custom.Project
+    dependsOn:
+      - zone
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      name: '${input.owner}-${input.name}'
+      zones:
+        - '${resource.zone.result.id}'
+      catalogs:
+        - '[CSP] Self Service VM'
+        - '[APP] Wordpress'
+        - '[K8S] Native Cluster'
+        - '[APP] Pipeline'
+        - '[APP] SockShop'
+      administrators:
+        - '${input.owner}@vmkloud.com'
+  zone:
+    type: Custom.VirtualPrivateZone
+    dependsOn:
+      - gw
+    metadata:
+      layoutPosition:
+        - 1
+        - 1
+    properties:
+      name: '${input.owner}-${input.name}'
+      computes:
+        - CL-WORK-01 / RP-ZONE-01
+        - CL-WORK-02 / RP-ZONE-02
+      placementPolicy: default
+      folderName: 'FL-VMKLOUD/${input.owner}'
+      networks: '${resource.net1[*].id + resource.net2[*].id + resource.net3[*].id + resource.net4[*].id + resource.net5[*].id}'
+      loadBalancers: '${resource.lb[*].id}'
+      edgeCluster: EDGE-CLUSTER
+      storageName: DS-VMKLOUD
+      storageType: thin
+  gw:
+    type: Cloud.NSX.Gateway
+    metadata:
+      layoutPosition:
+        - 1
+        - 2
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=1)||(input.networkType=="routed")&&length(input.routedNetworks)>=1)?1:0}'
+      name: '${input.owner}-${input.name}'
+      networks: '${resource.net1[*].id + resource.net2[*].id + resource.net3[*].id + resource.net4[*].id + resource.net5[*].id}'
+  lb:
+    type: Cloud.NSX.LoadBalancer
+    metadata:
+      layoutPosition:
+        - 1
+        - 3
+    properties:
+      count: '${input.loadBalancer==true&&(length(input.outboundNetworks)>=1||length(input.routedNetworks)>=1)?1:0}'
+      name: '${input.owner}-${input.name}'
+      routes:
+        - protocol: TCP
+          port: 1
+          instanceProtocol: TCP
+          instancePort: 1
+      network: '${resource.net1[0].id}'
+      gateway: '${resource.gw[0].id}'
+      instances: '${resource.lbvs[*].id}'
+      internetFacing: false
+  lbvs:
+    type: Cloud.vSphere.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 4
+    properties:
+      count: '${input.loadBalancer==true&&(length(input.outboundNetworks)>=1||length(input.routedNetworks)>=1)?1:0}'
+      name: '${input.owner}-${input.name}-LBVS-DO-NOT-DEL'
+      image: ubuntu20
+      flavor: medium
+      networks:
+        - network: '${resource.net1[0].id}'
+          assignment: static
+      folderName: 'FL-VMKLOUD/${input.owner}'
+      cloudConfig: |
+        power_state:
+          mode: poweroff
+          delay: "+2"
+  net1:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 2
+        - 0
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=1)||(input.networkType=="routed")&&length(input.routedNetworks)>=1)?1:0}'
+      name: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[0].name:input.routedNetworks[0].name}'
+      networkType: '${input.networkType}'
+      networkCidr: '${input.networkType=="outbound"?input.outboundNetworks[0].cidr:null}'
+      constraints:
+        - tag: 'network:${input.networkType}'
+      tags:
+        - key: vpc
+          value: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[0].name:input.routedNetworks[0].name}'
+  net2:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 3
+        - 0
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=2)||(input.networkType=="routed")&&length(input.routedNetworks)>=2)?1:0}'
+      name: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[1].name:input.routedNetworks[1].name}'
+      networkType: '${input.networkType}'
+      networkCidr: '${input.networkType=="outbound"?input.outboundNetworks[1].cidr:null}'
+      constraints:
+        - tag: 'network:${input.networkType}'
+      tags:
+        - key: vpc
+          value: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[1].name:input.routedNetworks[1].name}'
+  net3:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 4
+        - 0
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=3)||(input.networkType=="routed")&&length(input.routedNetworks)>=3)?1:0}'
+      name: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[2].name:input.routedNetworks[2].name}'
+      networkType: '${input.networkType}'
+      networkCidr: '${input.networkType=="outbound"?input.outboundNetworks[2].cidr:null}'
+      constraints:
+        - tag: 'network:${input.networkType}'
+      tags:
+        - key: vpc
+          value: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[2].name:input.routedNetworks[2].name}'
+  net4:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 5
+        - 0
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=4)||(input.networkType=="routed")&&length(input.routedNetworks)>=4)?1:0}'
+      name: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[3].name:input.routedNetworks[3].name}'
+      networkType: '${input.networkType}'
+      networkCidr: '${input.networkType=="outbound"?input.outboundNetworks[3].cidr:null}'
+      constraints:
+        - tag: 'network:${input.networkType}'
+      tags:
+        - key: vpc
+          value: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[3].name:input.routedNetworks[3].name}'
+  net5:
+    type: Cloud.NSX.Network
+    metadata:
+      layoutPosition:
+        - 6
+        - 0
+    properties:
+      count: '${((input.networkType=="outbound"&&length(input.outboundNetworks)>=5)||(input.networkType=="routed")&&length(input.routedNetworks)>=5)?1:0}'
+      name: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[4].name:input.routedNetworks[4].name}'
+      networkType: '${input.networkType}'
+      networkCidr: '${input.networkType=="outbound"?input.outboundNetworks[4].cidr:null}'
+      constraints:
+        - tag: 'network:${input.networkType}'
+      tags:
+        - key: vpc
+          value: '${input.owner}-${input.name}-${input.networkType=="outbound"?input.outboundNetworks[4].name:input.routedNetworks[4].name}'

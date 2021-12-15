@@ -1,0 +1,77 @@
+formatVersion: 1
+name: '[TEST] Scale In Out'
+version: 2
+inputs:
+  count:
+    type: number
+    title: VM Count
+    minimum: 1
+    maximum: 3
+    default: 1
+resources:
+  lb:
+    type: Cloud.LoadBalancer
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      network: '${resource.net.id}'
+      instances: '${resource.vm[*].id}'
+      internetFacing: false
+      address: 192.168.0.40
+      routes:
+        - protocol: HTTP
+          port: '80'
+          instanceProtocol: HTTP
+          instancePort: '80'
+          healthCheckConfiguration:
+            protocol: TCP
+            port: '80'
+            intervalSeconds: 10
+            timeoutSeconds: 5
+            unhealthyThreshold: 3
+            healthyThreshold: 2
+  vm:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 0
+        - 1
+    properties:
+      count: '${input.count}'
+      image: ubuntu20
+      flavor: medium
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      constraints:
+        - tag: 'compute:vmw01'
+      cloudConfig: |
+        #cloud-config
+        ssh_pwauth: true
+        package_update: true
+        package_upgrade: true
+        packages:
+         - apache2
+        write_files:
+          - path: /opt/init.sh
+            permissions: '0744'
+            owner: root:root
+            content: |
+              #!/bin/bash
+              echo "$(hostname)" > /var/www/html/index.html
+              systemctl restart apache2
+        runcmd:
+          - /opt/init.sh
+          - rm -rf /opt/init.sh
+  net:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'network:static'

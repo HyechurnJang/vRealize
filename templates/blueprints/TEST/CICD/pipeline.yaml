@@ -1,0 +1,88 @@
+---
+project: ADMIN
+kind: PIPELINE
+name: TEST - CICD
+icon: organization,left, is-ultramarine
+enabled: true
+concurrency: 10
+options: [
+  GIT_TRIGGER]
+input:
+  GIT_BRANCH_NAME: ''
+  GIT_CHANGE_SUBJECT: ''
+  GIT_COMMIT_ID: ''
+  GIT_EVENT_DESCRIPTION: ''
+  GIT_EVENT_OWNER_NAME: ''
+  GIT_EVENT_TIMESTAMP: ''
+  GIT_REPO_NAME: ''
+  GIT_SERVER_URL: ''
+_inputMeta:
+  GIT_SERVER_URL:
+    description: ''
+    mandatory: false
+  GIT_BRANCH_NAME:
+    description: ''
+    mandatory: false
+  GIT_COMMIT_ID:
+    description: ''
+    mandatory: true
+  GIT_EVENT_TIMESTAMP:
+    description: ''
+    mandatory: false
+  GIT_EVENT_DESCRIPTION:
+    description: ''
+    mandatory: false
+  GIT_REPO_NAME:
+    description: ''
+    mandatory: false
+  GIT_EVENT_OWNER_NAME:
+    description: ''
+    mandatory: false
+  GIT_CHANGE_SUBJECT:
+    description: ''
+    mandatory: false
+workspace:
+  type: DOCKER
+  endpoint: ''
+  image: ''
+  registry: ''
+  path: ''
+  autoCloneForTrigger: false
+  limits:
+    cpu: 1.0
+    memory: 512
+stageOrder:
+- Stage0
+stages:
+  Stage0:
+    taskOrder:
+    - Update with Deployment,Update with SSH
+    tasks:
+      Update with SSH:
+        type: SSH
+        preCondition: true==true
+        input:
+          script: git pull
+          username: root
+          password: VMware1!
+          passphrase: ''
+          privatekey: ''
+          host: 192.168.0.30
+          workingDirectory: /opt/vRealize
+          arguments: [
+            ]
+          environmentVariables: {
+            }
+          continueOnCommandFailure: false
+      Update with Deployment:
+        type: Blueprint
+        preCondition: true==false
+        input:
+          action: UpdateDeployment
+          apiToken: kgHHrfrIqOsYA1LIlq4SUwTeY8hEl0Gi
+          deploymentName: '[TEST] CICD'
+          allowDestroy: false
+          blueprint: '[TEST] CICD'
+          version: '1'
+          parameters:
+            commit: ${input.GIT_COMMIT_ID}

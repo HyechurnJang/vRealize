@@ -1,0 +1,29 @@
+formatVersion: 1
+name: '[TEST] Basic VM'
+version: 1
+inputs: {}
+resources:
+  net:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      networkType: existing
+      constraints:
+        - tag: 'network:test'
+  vm:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      image: ubuntu20
+      flavor: medium
+      networks:
+        - network: '${resource.net.id}'
+          assignment: static
+      constraints:
+        - tag: 'compute:vmw01'

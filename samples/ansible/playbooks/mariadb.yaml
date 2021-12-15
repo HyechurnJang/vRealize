@@ -1,0 +1,9 @@
+---
+- hosts: mysql
+  tasks:
+    - name: install mariadb
+      apt: name=mariadb-server update_cache=yes state=latest
+
+  handlers:
+    - name: restart mariadb
+      service: name=mariadb-server state=restarted

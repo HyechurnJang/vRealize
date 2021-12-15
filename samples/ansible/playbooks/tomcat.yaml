@@ -1,0 +1,14 @@
+---
+- hosts: tomcat
+  tasks:
+    - name: install openjdk
+      apt: name=openjdk-14-jdk update_cache=yes state=latest
+
+    - name: install tomcat
+      apt: name=tomcat9 update_cache=yes state=latest
+
+    - name: set java home
+      shell: echo 'JAVA_HOME=/usr/lib/jvm/java-14-openjdk-amd64/bin' >> /etc/default/tomcat9
+
+    - name: restart tomcat
+      shell: systemctl restart tomcat9
