@@ -7,27 +7,44 @@ Created on 2021. 12. 15.
 #===============================================================================
 # Generator Settings
 #===============================================================================
-installerName = 'vraPackageInstaller'
+installerName = 'installer_name_here'
 
 constants = {
-    # 'NsxManager': {
+    #===========================================================================
+    # 'SampleManager': {
     #     'encrypted': True,
     #     'map': {
-    #         'nsxHostname': 'hostname',
-    #         'nsxUsername': 'username',
-    #         'nsxPassword': 'password'
+    #         'sampleHostname': 'hostname',
+    #         'sampleUsername': 'username',
+    #         'samplePassword': 'password'
     #     }
     # },
+    #===========================================================================
 }
 
-resources = ['project']
+resources = [
+    #===========================================================================
+    # 'project',
+    # 'deployment',
+    # 'vpz',
+    # 'addr',
+    # 'kubernetes',
+    # 'pipeline',
+    # 'code',
+    # 'script',
+    # 'cert',
+    # 'data',
+    #===========================================================================
+]
 
 #===============================================================================
 # Generator Running
 #===============================================================================
+import os
 import re
 import json
 import zipfile
+import datetime
 
 REGEX = r'# __ABX_IMPLEMENTATIONS_START__[\r\n]+(?P<text>[\W\w\r\n]+)[\r\n]+# __ABX_IMPLEMENTATIONS_END__'
 
@@ -48,7 +65,10 @@ for resource in resources:
     with open('resources/{}/resource_delete.py'.format(resource), 'r') as fd: desc['deleteHandler'] = re.findall(REGEX, fd.read())[0]
     descriptions[manifest.name] = desc
 
-with open('dist/{}.py'.format(installerName), 'w') as fd:
+os.makedirs('dist/{}'.format(installerName), exist_ok=True)
+tstamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+with open('dist/{}/{}_{}.py'.format(installerName, installerName, tstamp), 'w') as fd:
     # write header
     fd.write("""# -*- coding: utf-8 -*-
 '''
@@ -94,7 +114,7 @@ rscDescs = {
 %s
 ''' % (installer))
 
-with open('dist/{}.abx'.format(installerName), 'w') as fd:
+with open('dist/{}/{}_{}.abx'.format(installerName, installerName, tstamp), 'w') as fd:
     # write manifest
     fd.write('''---
 exportVersion: "1"
@@ -117,6 +137,6 @@ inputs:
         for key in constant['map'].keys():
             fd.write('  {}: ""\n'.format(key))
 
-with zipfile.ZipFile('dist/{}.zip'.format(installerName), 'w') as fd:
-    fd.write('dist/{}.abx'.format(installerName), '{}.abx'.format(installerName))
-    fd.write('dist/{}.py'.format(installerName), '{}.py'.format(installerName))
+with zipfile.ZipFile('dist/{}/{}_{}.zip'.format(installerName, installerName, tstamp), 'w') as fd:
+    fd.write('dist/{}/{}_{}.abx'.format(installerName, installerName, tstamp), '{}.abx'.format(installerName))
+    fd.write('dist/{}/{}_{}.py'.format(installerName, installerName, tstamp), '{}.py'.format(installerName))
