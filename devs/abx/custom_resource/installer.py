@@ -23,4 +23,3 @@ installer = importlib.import_module('dist.latest')
 
 print('INPUTS -->\n{}\n'.format(json.dumps(inputs, indent=2)))
 outputs = installer.handler(None, inputs)
-print('OUTPUTS -->\n{}\n'.format(json.dumps(outputs, indent=2)))
