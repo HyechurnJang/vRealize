@@ -7,9 +7,6 @@ Created on 1983. 08. 09.
 #===============================================================================
 # Test Config
 #===============================================================================
-installerName = 'installer_name_here'
-version = 'installer_name_and_timestamp' 
-
 inputs = {
     'vraHostname': 'vra_hostname_or_ip_here',
     'vraUsername': 'username_here',
@@ -22,7 +19,7 @@ inputs = {
 #===============================================================================
 import json
 import importlib
-installer = importlib.import_module('dist.{}.{}'.format(installerName, version))
+installer = importlib.import_module('dist.latest')
 
 print('INPUTS -->\n{}\n'.format(json.dumps(inputs, indent=2)))
 outputs = installer.handler(None, inputs)

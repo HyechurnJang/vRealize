@@ -43,6 +43,7 @@ resources = [
 import os
 import re
 import json
+import shutil
 import zipfile
 import datetime
 
@@ -114,6 +115,9 @@ rscDescs = {
     fd.write('''
 %s
 ''' % (installer))
+
+    # copy installer latest
+    shutil.copy('dist/{}/{}_{}.py'.format(installerName, installerName, tstamp), 'dist/latest.py')
 
 with open('dist/{}/{}_{}.abx'.format(installerName, installerName, tstamp), 'w') as fd:
     # write manifest
