@@ -65,6 +65,7 @@ for resource in resources:
     with open('resources/{}/resource_delete.py'.format(resource), 'r') as fd: desc['deleteHandler'] = re.findall(REGEX, fd.read())[0]
     descriptions[manifest.name] = desc
 
+os.makedirs('dist', exist_ok=True)
 os.makedirs('dist/{}'.format(installerName), exist_ok=True)
 tstamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
