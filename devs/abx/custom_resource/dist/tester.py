@@ -22,7 +22,7 @@ inputs = {
 #===============================================================================
 import json
 import importlib
-installer = importlib.import_module('{}.{}'.format(installer, version))
+installer = importlib.import_module('{}.{}'.format(installerName, version))
 
 print('INPUTS -->\n{}\n'.format(json.dumps(inputs, indent=2)))
 outputs = installer.handler(None, inputs)
