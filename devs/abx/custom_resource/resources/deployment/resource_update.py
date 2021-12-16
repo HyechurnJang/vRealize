@@ -23,11 +23,20 @@ def handler(context, inputs):
     # set common values
     vra = VraManager(context, inputs)
     
+    # set default values
+    if 'name' not in inputs or not inputs['name']: raise Exception('name property must be required') # Required
+    if 'projectName' not in inputs or not inputs['projectName']: raise Exception('projectName property must be required') # Required
+    if 'itemType' not in inputs or not inputs['itemType']: raise Exception('itemType property must be required') # Required
+    if 'itemName' not in inputs or not inputs['itemName']: raise Exception('itemName property must be required') # Required
+    if 'inputs' not in inputs: inputs['inputs'] = {} # Optional Init
+    
+    # retrieve resource
+    
     # update resource
     deploymentId = inputs['id']
     vra.post('/deployment/api/deployments/{}/requests'.format(deploymentId), {
         'actionId': 'Deployment.Update',
-        'inputs': inputs['inputs'] if 'inputs' in inputs else {}
+        'inputs': inputs['inputs']
     })
     
     while True:

@@ -24,7 +24,11 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # set default values
-    if 'inputs' not in inputs: inputs['inputs'] = {}
+    if 'name' not in inputs or not inputs['name']: raise Exception('name property must be required') # Required
+    if 'projectName' not in inputs or not inputs['projectName']: raise Exception('projectName property must be required') # Required
+    if 'itemType' not in inputs or not inputs['itemType']: raise Exception('itemType property must be required') # Required
+    if 'itemName' not in inputs or not inputs['itemName']: raise Exception('itemName property must be required') # Required
+    if 'inputs' not in inputs: inputs['inputs'] = {} # Optional Init
     
     # get project
     for project in vra.get("/iaas/api/projects?$filter=(name eq '{}')".format(inputs['projectName']))['content']:
