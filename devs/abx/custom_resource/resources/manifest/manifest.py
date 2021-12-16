@@ -4,59 +4,75 @@ Created on 1983. 08. 09.
 @author: Hye-Churn Jang, CMBU Specialist in Korea, VMware [jangh@vmware.com]
 '''
 
-name = '' # custom resource name
+name = 'Manifest' # custom resource name
 
-sdk = 'no' # imported SDK at common directory
+sdk = 'vra' # imported SDK at common directory
 
 inputs = {
     'create': {
-        #=======================================================================
-        # name_here: default or constant
-        # example)
-        # 'VraManager': 'constant'
-        #=======================================================================
+        'VraManager': 'constant'
     },
     'read': {
     },
     'update': {
+        'VraManager': 'constant'
     },
     'delete': {
+        'VraManager': 'constant'
     }
 }
 
 properties = {
-    #===========================================================================
-    # 'string_required_property_name': {
-    #     'type': 'string',
-    #     'title': 'title_here',
-    #     'description': 'description_here',
-    # },
-    # 'string_optional_property_name': {
-    #     'type': 'string',
-    #     'default': '',
-    # },
-    # 'string_selectable_property_name': {
-    #     'type': 'string',
-    #     'enum': ['a', 'b'],
-    # },
-    # 'string_recreate_on_update_property_name': {
-    #     'type': 'string',
-    #     'recreateOnUpdate': True
-    # },
-    # 'string_encrypted_property_name': {
-    #     'type': 'string',
-    #     'encrypted': True
-    # },
-    # 'string_array_property_name': {
-    #     'type': 'array',
-    #     'default': [],
-    #     'items': {
-    #         'type': 'string'
-    #     },
-    # },
-    # 'object_property_name': {
-    #     'type': 'object',
-    #     'default': {},
-    # },
-    #===========================================================================
+    'name': {
+        'type': 'string',
+        'title': 'Name',
+        'recreateOnUpdate': True,
+        'description': 'Pipeline name',
+    },
+    'kubernetes': {
+        'type': 'string',
+        'title': 'Kubernetes',
+        'recreateOnUpdate': True,
+        'description': 'Kubernetes cluster',
+    },
+    'manifest': {
+        'type': 'string',
+        'title': 'Manifest',
+        'description': 'Manifest text',
+    },
+    'pipeConfig': {
+        'type': 'object',
+        'title': 'Pipeline Config',
+        'default': {},
+        'properties': {
+            'orders': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'order': {
+                            'type': 'array',
+                            'items': {
+                                'type': 'string'
+                            }
+                        }
+                    }
+                },
+                'default': []
+            },
+            'properties': {
+                'type': 'object',
+                'title': 'Properties',
+                'default': {}
+            }
+        },
+        'description': 'Manifest pipeline config'
+    },
+    'persistence': {
+        'type': 'boolean',
+        'title': 'Pipeline Persistence',
+        'default': False,
+        'recreateOnUpdate': True,
+        'description': 'Pipeline persistence option when resource deleted'
+    },
 }
