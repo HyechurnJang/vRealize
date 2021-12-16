@@ -51,15 +51,9 @@ for action in actions:
     manifest = __import__('actions.{}.manifest'.format(action)).__getattribute__(action).manifest
     desc = {
         'inputs': manifest.inputs,
-        'properties': manifest.properties,
     }
     with open('common/{}.py'.format(manifest.sdk), 'r') as fd: desc['sdk'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_create.py'.format(resource), 'r') as fd: desc['createHandler'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_read.py'.format(resource), 'r') as fd: desc['readHandler'] = re.findall(REGEX, fd.read())[0]
-    try:
-        with open('resources/{}/resource_update.py'.format(resource), 'r') as fd: desc['updateHandler'] = re.findall(REGEX, fd.read())[0]
-    except: pass
-    with open('resources/{}/resource_delete.py'.format(resource), 'r') as fd: desc['deleteHandler'] = re.findall(REGEX, fd.read())[0]
+    with open('actions/{}/action.py'.format(action), 'r') as fd: desc['handler'] = re.findall(REGEX, fd.read())[0]
     descriptions[manifest.name] = desc
 
 os.makedirs('dist', exist_ok=True)
@@ -87,25 +81,14 @@ rscDescs = {
     for name, desc in descriptions.items():
         fd.write("""'%s': {
     'inputs': %s,
-    'properties': %s,
     'sdk': '''%s\n%s''',
-    'createHandler': '''%s''',
-    'readHandler': '''%s''',
-    'deleteHandler': '''%s''',
+    'handler': '''%s'''
 """ % (
     name,
     desc['inputs'],
-    desc['properties'],
     desc['sdk'],
     TEXTILE,
-    desc['createHandler'],
-    desc['readHandler'],
-    desc['deleteHandler']))
-        if 'updateHandler' in desc: fd.write("""    'updateHandler': '''%s''',""" % desc['updateHandler'])
-        fd.write('''
-},
-''')
-        
+    desc['handler']))
     fd.write('}\n')
     
     # write installer
