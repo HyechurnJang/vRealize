@@ -23,7 +23,7 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # delete resource
-    vra.delete('' + inputs['id'])
+    vra.delete('/provisioning/uerp/resources/ip-addresses/' + inputs['id'])
     
     # publish null resource
     return {}
