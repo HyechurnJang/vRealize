@@ -22,19 +22,9 @@ constants = {
     #===========================================================================
 }
 
-resources = [
+actions = [
     #===========================================================================
-    # 'project',
-    # 'deployment',
-    # 'vpz',
-    # 'addr',
-    'manifest',
-    # 'kubernetes',
-    # 'pipeline',
-    # 'code',
-    # 'script',
-    # 'cert',
-    # 'data',
+    'change_name'
     #===========================================================================
 ]
 
@@ -57,9 +47,9 @@ _NEWLINE_ = '\\\\n'
 with open('common/installer.py', 'r') as fd: installer = re.findall(REGEX, fd.read())[0]
 
 descriptions = {}
-for resource in resources:
+for action in actions:
     
-    manifest = __import__('resources.{}.manifest'.format(resource)).__getattribute__(resource).manifest
+    manifest = __import__('actions.{}.manifest'.format(resource)).__getattribute__(resource).manifest
     desc = {
         'inputs': manifest.inputs,
         'properties': manifest.properties,
