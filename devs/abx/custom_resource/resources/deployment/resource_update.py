@@ -16,19 +16,28 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 # ABX Code Implementations                                                     #
 #===============================================================================
 # Import Libraries Here
+import time
 
 # Implement Handler Here
 def handler(context, inputs):
     # set common values
     vra = VraManager(context, inputs)
     
-    # retrieve resource
-    resource = vra.get('' + inputs['id'])
-    
     # update resource
-    if 'var1' in inputs: resource['var1'] = inputs['var1']
-    if 'var2' in inputs: resource['var2'] = inputs['var2']
-    vra.put('' + inputs['id'], resource)
+    deploymentId = inputs['id']
+    vra.post('/deployment/api/deployments/{}/requests'.format(deploymentId), {
+        'actionId': 'Deployment.Update',
+        'inputs': inputs['inputs'] if 'inputs' in inputs else {}
+    })
+    
+    while True:
+        time.sleep(5)
+        resource = vra.get('/deployment/api/deployments/' + deploymentId)
+        if resource['status'] == 'UPDATE_SUCCESSFUL': break
+        elif resource['status'] == 'UPDATE_INPROGRESS': continue
+        else:
+            vra.delete('/deployment/api/deployments/' + deploymentId)
+            raise Exception('could not update deployment : {} : {}'.format(inputs['name'], resource['status']))
     
     # publish resource
     outputs = inputs

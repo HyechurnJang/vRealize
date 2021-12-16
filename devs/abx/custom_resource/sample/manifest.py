@@ -39,6 +39,14 @@ properties = {
     #     'type': 'string',
     #     'enum': ['a', 'b'],
     # },
+    # 'string_recreate_on_update_property_name': {
+    #     'type': 'string',
+    #     'recreateOnUpdate': True
+    # },
+    # 'string_encrypted_property_name': {
+    #     'type': 'string',
+    #     'encrypted': True
+    # },
     # 'string_array_property_name': {
     #     'type': 'array',
     #     'default': [],
