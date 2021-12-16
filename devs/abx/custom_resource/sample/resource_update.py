@@ -22,6 +22,13 @@ def handler(context, inputs):
     # set common values
     vra = VraManager(context, inputs)
     
+    # set default values
+    if 'var1' not in inputs or not inputs['var1']: raise Exception('var1 property must be required') # Required
+    if 'var2' not in inputs: inputs['var2'] = None # Optional Init
+    if 'var3' not in inputs or not inputs['var3']: inputs['var3'] = 'default' # Optional Enum Init
+    if 'var4' not in inputs: inputs['var4'] = [] # Optional List Init
+    if 'var5' not in inputs: inputs['var5'] = {} # Optional Dict Init
+    
     # retrieve resource
     resource = vra.get('' + inputs['id'])
     

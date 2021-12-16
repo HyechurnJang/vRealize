@@ -29,7 +29,7 @@ def handler(context, inputs):
     if 'networks' not in inputs or not inputs['networks']: raise Exception('networks property must be required') # Required
     if 'storage' not in inputs or not inputs['storage']: raise Exception('storage property must be required') # Required
     if 'placementPolicy' not in inputs or not inputs['placementPolicy']: inputs['placementPolicy'] = 'default' # Optional Init
-    if 'loadBalancers' not in inputs or not inputs['loadBalancers']: inputs['loadBalancers'] = [] # Optional Init
+    if 'loadBalancers' not in inputs: inputs['loadBalancers'] = [] # Optional Init
     if 'edgeCluster' not in inputs: inputs['edgeCluster'] = '' # Optional Init
     if 'storageType' not in inputs or not inputs['storageType']: inputs['storageType'] = 'thin' # Optional Init
     

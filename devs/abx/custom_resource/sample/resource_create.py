@@ -23,11 +23,15 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # set default values
-    if 'var1' not in inputs or inputs['var1'] == None or inputs['var1'] == '': raise Exception('var1 property must be required') # Required
-    if 'var2' not in inputs or inputs['var2'] == None or inputs['var2'] == '': inputs['var2'] = None # Initialized
+    if 'var1' not in inputs or not inputs['var1']: raise Exception('var1 property must be required') # Required
+    if 'var2' not in inputs: inputs['var2'] = None # Optional Init
+    if 'var3' not in inputs or not inputs['var3']: inputs['var3'] = 'default' # Optional Enum Init
+    if 'var4' not in inputs: inputs['var4'] = [] # Optional List Init
+    if 'var5' not in inputs: inputs['var5'] = {} # Optional Dict Init
     
     # create resource
-    resource = vra.post('')
+    resource = vra.post('', {
+    })
     
     # publish resource
     outputs = inputs
