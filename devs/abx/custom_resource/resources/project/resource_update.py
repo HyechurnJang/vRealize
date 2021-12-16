@@ -22,21 +22,34 @@ def handler(context, inputs):
     # set common values
     vra = VraManager(context, inputs)
     
+    # set default values
+    if 'name' not in inputs or not inputs['name']: raise Exception('name property must be required') # Required
+    if 'description' not in inputs: inputs['description'] = '' # Optional Init
+    if 'sharedResources' not in inputs: inputs['sharedResources'] = True # Optional Init
+    if 'administrators' not in inputs: inputs['administrators'] = [] # Optional Init
+    if 'members' not in inputs: inputs['members'] = [] # Optional Init
+    if 'viewers' not in inputs: inputs['viewers'] = [] # Optional Init
+    if 'zones' not in inputs: inputs['zones'] = [] # Optional Init
+    if 'placementPolicy' not in inputs or not inputs['placementPolicy']: inputs['placementPolicy'] = 'default' # Optional Init
+    if 'customProperties' not in inputs: inputs['customProperties'] = {} # Optional Init
+    if 'machineNamingTemplate' not in inputs: inputs['machineNamingTemplate'] = '' # Optional Init
+    if 'operationTimeout' not in inputs: inputs['operationTimeout'] = 0 # Optional Init
+    
     # retrieve resource
     resource = vra.get('/iaas/api/projects/' + inputs['id'])
     
     # update resource
-    if 'name' in inputs: resource['name'] = inputs['name']
-    if 'description' in inputs: resource['description'] = inputs['description']
-    if 'sharedResources' in inputs: resource['sharedResources'] = inputs['sharedResources']
-    if 'administrators' in inputs and inputs['administrators']: resource['administrators'] = [{'type': 'user', 'email': account} for account in inputs['administrators']]
-    if 'members' in inputs and inputs['members']: resource['members'] = [{'type': 'user', 'email': account} for account in inputs['members']]
-    if 'viewers' in inputs and inputs['viewers']: resource['viewers'] = [{'type': 'user', 'email': account} for account in inputs['viewers']]
-    if 'zones' in inputs and inputs['zones']: resource['zoneAssignmentConfigurations'] = [{'zoneId': zoneId} for zoneId in inputs['zones']]
-    if 'placementPolicy' in inputs: resource['placementPolicy'] = inputs['placementPolicy']
-    if 'customProperties' in inputs: resource['customProperties'] = inputs['customProperties']
-    if 'machineNamingTemplate' in inputs: resource['machineNamingTemplate'] = inputs['machineNamingTemplate']
-    if 'operationTimeout' in inputs: resource['operationTimeout'] = inputs['operationTimeout']
+    resource['name'] = inputs['name']
+    resource['description'] = inputs['description']
+    resource['sharedResources'] = inputs['sharedResources']
+    resource['administrators'] = [{'type': 'user', 'email': account} for account in inputs['administrators']]
+    resource['members'] = [{'type': 'user', 'email': account} for account in inputs['members']]
+    resource['viewers'] = [{'type': 'user', 'email': account} for account in inputs['viewers']]
+    resource['zones'] = [{'zoneId': zoneId} for zoneId in inputs['zones']]
+    resource['placementPolicy'] = inputs['placementPolicy'].upper()
+    resource['customProperties'] = inputs['customProperties']
+    resource['machineNamingTemplate'] = inputs['machineNamingTemplate']
+    resource['operationTimeout'] = inputs['operationTimeout']
     vra.patch('/iaas/api/projects/' + inputs['id'], resource)
     
     # publish resource

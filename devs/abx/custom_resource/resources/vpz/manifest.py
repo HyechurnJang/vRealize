@@ -4,59 +4,84 @@ Created on 1983. 08. 09.
 @author: Hye-Churn Jang, CMBU Specialist in Korea, VMware [jangh@vmware.com]
 '''
 
-name = '' # custom resource name
+name = 'HCVirtualPrivateZone' # custom resource name
 
-sdk = 'no' # imported SDK at common directory
+sdk = 'vra' # imported SDK at common directory
 
 inputs = {
     'create': {
-        #=======================================================================
-        # name_here: default or constant
-        # example)
-        # 'VraManager': 'constant'
-        #=======================================================================
+        'VraManager': 'constant'
     },
     'read': {
     },
     'update': {
+        'VraManager': 'constant'
     },
     'delete': {
+        'VraManager': 'constant'
     }
 }
 
 properties = {
-    #===========================================================================
-    # 'string_required_property_name': {
-    #     'type': 'string',
-    #     'title': 'title_here',
-    #     'description': 'description_here',
-    # },
-    # 'string_optional_property_name': {
-    #     'type': 'string',
-    #     'default': '',
-    # },
-    # 'string_selectable_property_name': {
-    #     'type': 'string',
-    #     'enum': ['a', 'b'],
-    # },
-    # 'string_recreate_on_update_property_name': {
-    #     'type': 'string',
-    #     'recreateOnUpdate': True
-    # },
-    # 'string_encrypted_property_name': {
-    #     'type': 'string',
-    #     'encrypted': True
-    # },
-    # 'string_array_property_name': {
-    #     'type': 'array',
-    #     'default': [],
-    #     'items': {
-    #         'type': 'string'
-    #     },
-    # },
-    # 'object_property_name': {
-    #     'type': 'object',
-    #     'default': {},
-    # },
-    #===========================================================================
+    'name': {
+        'type': 'string',
+        'title': 'Name',
+        'description': 'Name of virtual private zone'
+    },
+    'computes': {
+        'type': 'array',
+        'title': 'Computes',
+        'items': {
+            'type': 'string'
+        },
+        'description': 'Compute name list of placement hosts, clusters or resource pools'
+    },
+    'networks': {
+        'type': 'array',
+        'title': 'Networks',
+        'items': {
+            'type': 'string'
+        },
+        'description': 'Network id list'
+    },
+    'storage': {
+        'type': 'string',
+        'title': 'Storage',
+        'description': 'Datastore name to deploy',
+    },
+    'folder': {
+        'type': 'string',
+        'title': 'Folder',
+        'default': '',
+        'description': 'Folder name to deploy',
+    },
+    'placementPolicy': {
+        'type': 'string',
+        'title': 'Placement Policy',
+        'default': 'default',
+        'enum': ['default', 'binpack', 'spread'],
+        'description': 'Placement policy with "default", "binpack" or "spread"'
+    },
+    'loadBalancers': {
+        'type': 'array',
+        'title': 'Load Balancer',
+        'default': [],
+        'items': {
+            'type': 'string'
+        },
+        'description': 'Load balancer id list'
+    },
+    'edgeCluster': {
+        'type': 'string',
+        'title': 'Edge Cluster',
+        'default': '',
+        'description': 'Edge cluster name to use deployment',
+    },
+    'storageType': {
+        'type': 'string',
+        'title': 'Storage Type',
+        'default': 'thin',
+        'enum': ['thin', 'thick', 'eagerZeroedThick'],
+        'description': 'Storage type with "thin", "thick" or "eagerZeroedThick"'
+    },
 }

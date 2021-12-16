@@ -79,10 +79,10 @@ properties = {
     'placementPolicy': {
         'type': 'string',
         'title': 'placementPolicy',
-        'default': 'DEFAULT',
+        'default': 'default',
         'enum': [
-            'DEFAULT',
-            'SPREAD'
+            'default',
+            'spread'
         ],
         'description': 'Specify the placement policy that will be applied when selecting a cloud zone for provisioning'
     },
