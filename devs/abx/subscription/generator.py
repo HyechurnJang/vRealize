@@ -48,8 +48,7 @@ with open('common/installer.py', 'r') as fd: installer = re.findall(REGEX, fd.re
 
 descriptions = {}
 for action in actions:
-    
-    manifest = __import__('actions.{}.manifest'.format(resource)).__getattribute__(resource).manifest
+    manifest = __import__('actions.{}.manifest'.format(action)).__getattribute__(action).manifest
     desc = {
         'inputs': manifest.inputs,
         'properties': manifest.properties,
