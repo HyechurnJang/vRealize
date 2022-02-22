@@ -4,7 +4,7 @@ Created on 1983. 08. 09.
 @author: Hye-Churn Jang, CMBU Specialist in Korea, VMware [jangh@vmware.com]
 '''
 
-name = 'Script' # custom resource name
+name = 'Scripts' # custom resource name
 
 sdk = 'vra' # imported SDK at common directory
 
@@ -35,6 +35,7 @@ properties = {
     'osType': {
         'type': 'string',
         'title': 'OS Type',
+        'default': 'linux',
         'enum': ['linux', 'windows'],
         'description': 'os type to run scripts'
     },
