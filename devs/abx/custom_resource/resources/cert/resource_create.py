@@ -10,7 +10,6 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
-_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -21,7 +20,6 @@ _NEWLINE_ = '\n'
 # Implement Handler Here
 def handler(context, inputs):
     # set common values
-    vra = VraManager(context, inputs)
     
     # set default values
     if 'var1' not in inputs or not inputs['var1']: raise Exception('var1 property must be required') # Required
