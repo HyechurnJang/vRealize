@@ -10,7 +10,6 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
-_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -35,22 +34,28 @@ def handler(context, inputs):
     if 'destroy' not in inputs: inputs['destroy'] = ''
     
     id = inputs['id']
-    if inputs['destroy']:
-        osType = inputs['osType']
+    instances = inputs['instances']
+    targets = inputs['targets']
+    osType = inputs['osType']
+    username = inputs['username']
+    password = context.getSecret(inputs['password'])
+    destroy = inputs['destroy']
+    
+    if destroy:
         delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
-            scripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + inputs['destroy']
+            scripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + destroy
             scripts = base64.b64encode(scripts.encode('utf-8')).decode('utf-8')
             postScripts = 'echo "' + delimeter + '"\ncat /tmp/' + id + '.err | sed "s/^[/\\.].*' + id + '.sh: //g" 2>/dev/null\necho "' + delimeter + '"\ncat /tmp/' + id + '.out 2>/dev/null\nrm -rf /tmp/' + id + '.* 2>&1>/dev/null\n'
-            runScripts = 'echo "' + scripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts;
+            runScripts = 'echo "' + scripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
         elif osType == 'windows':
-            scripts = inputs['destroy']
+            scripts = destroy
             runScripts = scripts
         
         # delete resource
         executions = {}
         executionIds = []
-        for instance in inputs['instances']:
+        for instance in instances:
             req = {
                 'async-execution': True,
                 'parameters': [{
@@ -60,11 +65,11 @@ def handler(context, inputs):
                 },{
                     'name': 'username',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['username']}}
+                    'value': {'string': {'value': username}}
                 },{
                     'name': 'password',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['password']}}
+                    'value': {'string': {'value': password}}
                 },{
                     'name': 'scripts',
                     'type': 'string',
@@ -107,6 +112,6 @@ def handler(context, inputs):
     outputs.pop('VraManager')
     outputs['id'] = id
     outputs['outputs'] = consoleOutputs
-    outputs['resourceLinks'] = inputs['instances']
+    outputs['targets'] = instances
     return outputs
 # __ABX_IMPLEMENTATIONS_END__

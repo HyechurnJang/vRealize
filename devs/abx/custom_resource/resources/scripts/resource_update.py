@@ -10,7 +10,6 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
-_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -35,20 +34,27 @@ def handler(context, inputs):
     if 'destroy' not in inputs: inputs['destroy'] = ''
     
     id = inputs['id']
+    instances = inputs['instances']
+    targets = inputs['targets']
+    osType = inputs['osType']
+    username = inputs['username']
+    password = context.getSecret(inputs['password'])
+    install = inputs['install']
+    configure = inputs['configure']
+    destroy = inputs['destroy']
         
     deleteInstances = []
-    for instance in inputs['resourceLinks']:
-        if instance not in inputs['instances']: deleteInstances.append(instance)
-    if deleteInstances and inputs['destroy']:
-        osType = inputs['osType']
+    for instance in targets:
+        if instance not in instances: deleteInstances.append(instance)
+    if deleteInstances and destroy:
         delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
-            scripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + inputs['destroy']
+            scripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + destroy
             scripts = base64.b64encode(scripts.encode('utf-8')).decode('utf-8')
             postScripts = 'echo "' + delimeter + '"\ncat /tmp/' + id + '.err | sed "s/^[/\\.].*' + id + '.sh: //g" 2>/dev/null\necho "' + delimeter + '"\ncat /tmp/' + id + '.out 2>/dev/null\nrm -rf /tmp/' + id + '.* 2>&1>/dev/null\n'
-            runScripts = 'echo "' + scripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts;
+            runScripts = 'echo "' + scripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
         elif osType == 'windows':
-            scripts = inputs['destroy']
+            scripts = destroy
             runScripts = scripts
         
         # delete resource
@@ -64,11 +70,11 @@ def handler(context, inputs):
                 },{
                     'name': 'username',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['username']}}
+                    'value': {'string': {'value': username}}
                 },{
                     'name': 'password',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['password']}}
+                    'value': {'string': {'value': password}}
                 },{
                     'name': 'scripts',
                     'type': 'string',
@@ -77,27 +83,26 @@ def handler(context, inputs):
             }
             res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
     
-    if inputs['instances'] and (inputs['install'] or inputs['configure']):
-        osType = inputs['osType']
+    if instances and (install or configure):
         delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
-            createScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + inputs['install'] + '\n' + inputs['configure']
-            updateScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + inputs['configure']
+            createScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + install + '\n' + configure
+            updateScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + configure
             createScripts = base64.b64encode(createScripts.encode('utf-8')).decode('utf-8')
             updateScripts = base64.b64encode(updateScripts.encode('utf-8')).decode('utf-8')
             postScripts = 'echo "' + delimeter + '"\ncat /tmp/' + id + '.err | sed "s/^[/\\.].*' + id + '.sh: //g" 2>/dev/null\necho "' + delimeter + '"\ncat /tmp/' + id + '.out 2>/dev/null\nrm -rf /tmp/' + id + '.* 2>&1>/dev/null\n'
-            runCreateScripts = 'echo "' + createScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts;
-            runUpdateScripts = 'echo "' + updateScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts;
+            runCreateScripts = 'echo "' + createScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
+            runUpdateScripts = 'echo "' + updateScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
         elif osType == 'windows':
-            createScripts = inputs['install'] + '\n' + inputs['configure']
-            updateScripts = inputs['configure']
+            createScripts = install + '\n' + configure
+            updateScripts = configure
             runCreateScripts = createScripts
             runUpdateScripts = updateScripts
         
         # update resource
         executions = {}
         executionIds = []
-        for instance in inputs['instances']:
+        for instance in instances:
             req = {
                 'async-execution': True,
                 'parameters': [{
@@ -107,15 +112,15 @@ def handler(context, inputs):
                 },{
                     'name': 'username',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['username']}}
+                    'value': {'string': {'value': username}}
                 },{
                     'name': 'password',
                     'type': 'string',
-                    'value': {'string': {'value': inputs['password']}}
+                    'value': {'string': {'value': password}}
                 },{
                     'name': 'scripts',
                     'type': 'string',
-                    'value': {'string': {'value': runUpdateScripts if instance in inputs['resourceLinks'] else runCreateScripts}}
+                    'value': {'string': {'value': runUpdateScripts if instance in targets else runCreateScripts}}
                 }]
             }
             res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
@@ -154,6 +159,6 @@ def handler(context, inputs):
     outputs.pop('VraManager')
     outputs['id'] = id
     outputs['outputs'] = consoleOutputs
-    outputs['resourceLinks'] = inputs['instances']
+    outputs['targets'] = instances
     return outputs
 # __ABX_IMPLEMENTATIONS_END__

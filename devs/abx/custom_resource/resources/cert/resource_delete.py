@@ -10,6 +10,7 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
+_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -19,6 +20,12 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 
 # Implement Handler Here
 def handler(context, inputs):
-    # bypass resource
-    return inputs
+    # set common values
+    vra = VraManager(context, inputs)
+    
+    # delete resource
+    vra.delete('' + inputs['id'])
+    
+    # publish null resource
+    return {}
 # __ABX_IMPLEMENTATIONS_END__

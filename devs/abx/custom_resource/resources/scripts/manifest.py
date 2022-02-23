@@ -26,7 +26,6 @@ properties = {
     'instances': {
         'type': 'array',
         'title': 'Instances',
-        'default': [],
         'items': {
             'type': 'string'
         },
@@ -35,7 +34,6 @@ properties = {
     'osType': {
         'type': 'string',
         'title': 'OS Type',
-        'default': 'linux',
         'enum': ['linux', 'windows'],
         'description': 'os type to run scripts'
     },
@@ -53,16 +51,19 @@ properties = {
     'install': {
         'type': 'string',
         'title': 'Install Scripts',
+        'default': '',
         'description': 'only run script when first deployed',
     },
     'configure': {
         'type': 'string',
         'title': 'Configure Scripts',
+        'default': '',
         'description': 'run script when post install and scripts updated',
     },
     'destroy': {
         'type': 'string',
         'title': 'Destroy Scripts',
+        'default': '',
         'description': 'run script when destroyed',
     },
 }
