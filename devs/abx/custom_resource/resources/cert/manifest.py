@@ -18,7 +18,6 @@ inputs = {
         'VraManager': 'constant'
     },
     'delete': {
-        'VraManager': 'constant'
     }
 }
 
