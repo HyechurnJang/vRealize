@@ -28,6 +28,7 @@ updateInputs = {
 #===============================================================================
 import resource_create
 import resource_read
+import resource_update
 import resource_delete
 
 class Context:
@@ -46,6 +47,14 @@ inputs = outputs
 print('READ INPUTS -->\n{}\n'.format(json.dumps(inputs, indent=2)))
 outputs = resource_read.handler(Context, inputs)
 print('READ OUTPUTS -->\n{}\n'.format(json.dumps(outputs, indent=2)))
+
+if KEY_WAIT: input('press any key to start update: ')
+inputs = outputs
+inputs['VraManager'] = constants['VraManager']
+for k, v in updateInputs.items(): inputs[k] = v
+print('UPDATE INPUTS -->\n{}\n'.format(json.dumps(inputs, indent=2)))
+outputs = resource_update.handler(Context, inputs)
+print('UPDATE OUTPUTS -->\n{}\n'.format(json.dumps(outputs, indent=2)))
 
 if KEY_WAIT: input('press any key to start delete: ')
 inputs = outputs

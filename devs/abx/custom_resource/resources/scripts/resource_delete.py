@@ -17,6 +17,7 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 #===============================================================================
 # Import Libraries Here
 import time
+import json
 import base64
 
 # Implement Handler Here
@@ -35,10 +36,9 @@ def handler(context, inputs):
     
     id = inputs['id']
     instances = inputs['instances']
-    targets = inputs['targets']
     osType = inputs['osType']
     username = inputs['username']
-    password = context.getSecret(inputs['password'])
+    password = inputs['password'] = context.getSecret(inputs['password'])
     destroy = inputs['destroy']
     
     if destroy:
@@ -52,7 +52,7 @@ def handler(context, inputs):
             scripts = destroy
             runScripts = scripts
         
-        # delete resource
+        # create resource
         executions = {}
         executionIds = []
         for instance in instances:
@@ -76,7 +76,7 @@ def handler(context, inputs):
                     'value': {'string': {'value': runScripts}}
                 }]
             }
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
+            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req)
             executions[res['execution-id']] = instance
             executionIds.append(res['execution-id'])
         executionCount = len(executionIds)
@@ -110,7 +110,6 @@ def handler(context, inputs):
     # publish resource
     outputs = inputs
     outputs.pop('VraManager')
-    outputs['id'] = id
     outputs['outputs'] = consoleOutputs
     outputs['targets'] = instances
     return outputs

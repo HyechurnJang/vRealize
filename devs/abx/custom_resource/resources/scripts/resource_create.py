@@ -38,7 +38,7 @@ def handler(context, inputs):
     instances = inputs['instances']
     osType = inputs['osType']
     username = inputs['username']
-    password = context.getSecret(inputs['password'])
+    password = inputs['password'] = context.getSecret(inputs['password'])
     install = inputs['install']
     configure = inputs['configure']
     
