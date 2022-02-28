@@ -37,13 +37,13 @@ def handler(context, inputs):
     username = inputs['username']
     password = inputs['password'] = context.getSecret(inputs['password'])
     
-    b64Key = base64.b64encode(privateKey).decode('utf-8')
-    scripts = '''# Register Cert
+    b64Key = base64.b64encode(privateKey.encode('utf-8')).decode('utf-8')
+    scripts = """# Register Cert
 mkdir -p ~/.ssh
 echo "{}" | base64 -d | tee ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 ssh-keygen -f ~/.ssh/id_rsa -y >> ~/.ssh/authorized_keys
-'''.format(b64Key)
+""".format(b64Key)
     
     # update resource
     executions = {}

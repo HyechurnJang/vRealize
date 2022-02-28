@@ -39,13 +39,18 @@ def handler(context, inputs):
     keySize = inputs['keySize']
     
     privateKey = subprocess.run('openssl genrsa {}'.format(keySize), shell=True, check=True, capture_output=True).stdout.decode('utf-8').strip()
-    b64Key = base64.b64encode(privateKey).decode('utf-8')
-    scripts = '''# Register Cert
+    
+    print(privateKey)
+    
+    b64Key = base64.b64encode(privateKey.encode('utf-8')).decode('utf-8')
+    scripts = """# Register Cert
 mkdir -p ~/.ssh
 echo "{}" | base64 -d | tee ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 ssh-keygen -f ~/.ssh/id_rsa -y >> ~/.ssh/authorized_keys
-'''.format(b64Key)
+""".format(b64Key)
+
+    print(scripts)
     
         # create resource
     executions = {}
