@@ -1,0 +1,16 @@
+# Prepare
+docker pull nginx:latest
+docker tag nginx:latest reg.vmkloud.com:5000/vmk-nginx:origin
+docker push reg.vmkloud.com:5000/vmk-nginx:origin
+
+# Create Version Tag
+TAG_VER=$(date +"%Y%m%d.%H%M%S")
+echo "$TAG_VER" | tr -d '\r' > $SCRIPT_RESPONSE_FILE
+
+# Build Container
+cd /opt/vRealize
+git pull
+docker build -t reg.vmkloud.com:5000/vmk-nginx:$TAG_VER /opt/vRealize/samples/cicd
+
+# Push Container
+docker push reg.vmkloud.com:5000/vmk-nginx:$TAG_VER
