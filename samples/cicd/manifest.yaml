@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: vmk-nginx
-        image: vrx.vmkloud.com/vmk-nginx:$${TAG_VER}
+        image: reg.vmkloud.com/vmk-nginx:$${TAG_VER}
         ports:
         - containerPort: 80
 ---
