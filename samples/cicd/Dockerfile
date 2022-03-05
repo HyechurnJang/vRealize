@@ -1,2 +1,2 @@
 FROM vmk-nginx:origin
-COPY index.html /usr/share/nginx/html
+COPY /opt/vRealize/samples/cicd/index.html /usr/share/nginx/html
