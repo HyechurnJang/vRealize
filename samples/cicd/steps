@@ -1,16 +1,65 @@
-# Prepare
+------------------------------------------------------------
+------------------------------------------------------------
+Environment
+------------------------------------------------------------
+docker run -d -p 5000:5000 --restart=always --name registry -v /opt/registry:/registry -e "REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry" registry:2.7.0
+
+cat <<EOF> /etc/docker/daemon.json
+{
+    "insecure-registries": ["reg.vmkloud.com:5000"]
+}
+EOF
+systemctl restart docker
+docker login reg.vmkloud.com:5000
+
 docker pull nginx:latest
 docker tag nginx:latest reg.vmkloud.com:5000/vmk-nginx:origin
 docker push reg.vmkloud.com:5000/vmk-nginx:origin
 
+curl -k -X GET http://reg.vmkloud.com:5000/v2/_catalog
+curl -k -X GET http://reg.vmkloud.com:5000/v2/vmk-nginx/tags/list
+curl -k -v -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X DELETE http://reg.vmkloud.com:5000/v2/vmk-nginx/manifests/$(curl -k -v --silent -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X GET http://reg.vmkloud.com:5000/v2/vmk-nginx/manifests/0.1 2>&1 | grep Docker-Content-Digest | awk '{print ($3)}' | tr -d '\r')
+docker exec -it registry registry garbage-collect /etc/docker/registry/config.yml
+rm -rf /opt/registry/*
+
+
+------------------------------------------------------------
+------------------------------------------------------------
+Build
+------------------------------------------------------------
+Build / SSH
+vrx.vmkloud.com
+root / VMware1!
 # Create Version Tag
 TAG_VER=$(date +"%Y%m%d.%H%M%S")
 echo "$TAG_VER" | tr -d '\r' > $SCRIPT_RESPONSE_FILE
-
 # Build Container
 cd /opt/vRealize
 git pull
-docker build -t reg.vmkloud.com:5000/vmk-nginx:$TAG_VER /opt/vRealize/samples/cicd
-
+cd /opt/vRealize/samples/cicd
+docker build -t reg.vmkloud.com:5000/vmk-nginx:$TAG_VER .
 # Push Container
 docker push reg.vmkloud.com:5000/vmk-nginx:$TAG_VER
+
+------------------------------------------------------------
+Test
+------------------------------------------------------------
+Deploy / Kubernetes
+ADMIN-TEST / 15 / 적용 / 소스 제어 / vRealize /
+samples/cicd/manifest.yaml
+TAG_VER : ${Build.Build.output.response}
+
+Check Page / REST
+GET / http://192.168.3.23:31000/index.html
+Accept : text/html
+
+Is OK / Condition
+${Test.Check Page.output.responseCode} == 200
+
+------------------------------------------------------------
+Production
+------------------------------------------------------------
+Deploy / Kubernetes
+ADMIN-PROD / 15 / 적용 / 소스 제어 / vRealize /
+samples/cicd/manifest.yaml
+TAG_VER : ${Build.Build.output.response}
