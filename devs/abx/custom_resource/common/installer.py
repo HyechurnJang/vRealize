@@ -136,14 +136,14 @@ Created on 1983. 08. 09.
                 'source': actionSource,
                 'memoryInMB': 300,
                 'timeoutSeconds': 600,
-                'scalable': False,
+                'scalable': True,
                 'shared': True,
                 'actionType': 'SCRIPT',
                 'entrypoint': 'handler',
                 'scriptSource': 0,
                 'runtime': 'python',
                 'configuration': {},
-                'provider': '',
+                'provider': 'on-prem',
                 'metadata': { 'actionIsRetriable': False }
             })
             

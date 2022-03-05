@@ -25,16 +25,12 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # set default values
-    if 'instances' not in inputs: inputs['instances'] = []
-    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
-    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
-    if 'keySize' not in inputs or not inputs['keySize']: inputs['keySize'] = 2048
-    
-    id = inputs['id']
-    instances = inputs['instances']
     targets = inputs['targets']
     privateKey = inputs['privateKey']
+    instances = inputs['instances'] if 'instances' in inputs and inputs['instances'] else [] 
+    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
     username = inputs['username']
+    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
     password = inputs['password'] = context.getSecret(inputs['password'])
     
     print('[INFO] Create Cert Description')
@@ -58,7 +54,7 @@ chmod 600 ~/.ssh/authorized_keys
     executionIds = []
     for instance in instances:
         if instance not in targets:
-            req = {
+            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
                 'async-execution': True,
                 'parameters': [{
                     'name': 'instance',
@@ -77,8 +73,7 @@ chmod 600 ~/.ssh/authorized_keys
                     'type': 'string',
                     'value': {'string': {'value': scripts}}
                 }]
-            }
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
+            })
             executions[res['execution-id']] = instance
             executionIds.append(res['execution-id'])
     executionCount = len(executionIds)
@@ -100,7 +95,6 @@ chmod 600 ~/.ssh/authorized_keys
     # publish resource
     outputs = inputs
     outputs.pop('VraManager')
-    outputs['id'] = id
     outputs['privateKey'] = privateKey
     outputs['targets'] = instances
     return outputs

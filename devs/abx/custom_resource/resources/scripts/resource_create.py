@@ -26,21 +26,17 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # set default values
-    if 'instances' not in inputs: inputs['instances'] = []
-    if 'osType' not in inputs or not inputs['osType'] or inputs['osType'] not in ['linux', 'windows']: raise Exception('osType property must be one of linux or windows') # Required
-    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
-    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
-    if 'install' not in inputs: inputs['install'] = ''
-    if 'configure' not in inputs: inputs['configure'] = ''
-    if 'destroy' not in inputs: inputs['destroy'] = ''
-    
     id = str(uuid.uuid4())
-    instances = inputs['instances']
+    instances = inputs['instances'] if 'instances' in inputs and inputs['instances'] else [] 
+    if 'osType' not in inputs or not inputs['osType'] or inputs['osType'] not in ['linux', 'windows']: raise Exception('osType property must be one of linux or windows') # Required
     osType = inputs['osType']
+    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
     username = inputs['username']
+    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
     password = inputs['password'] = context.getSecret(inputs['password'])
-    install = inputs['install']
-    configure = inputs['configure']
+    install = inputs['install'] if 'install' in inputs and inputs['install'] else ''
+    configure = inputs['configure'] if 'configure' in inputs and inputs['configure'] else ''
+    delimeter = '__VRA_EXEC_DELIMETER__'
     
     print('[INFO] Create Scripts Description')
     print('properties.instances\n{}\n'.format(instances))
@@ -51,7 +47,6 @@ def handler(context, inputs):
     print('properties.configure\n{}\n'.format(configure))
     
     if install or configure:
-        delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
             scripts = '''# Scripts
 exec 1>/tmp/{id}.stdout
@@ -79,7 +74,7 @@ cat /tmp/{id}.output 2>/dev/null
         executions = {}
         executionIds = []
         for instance in instances:
-            req = {
+            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
                 'async-execution': True,
                 'parameters': [{
                     'name': 'instance',
@@ -98,8 +93,7 @@ cat /tmp/{id}.output 2>/dev/null
                     'type': 'string',
                     'value': {'string': {'value': runScripts}}
                 }]
-            }
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
+            })
             executions[res['execution-id']] = instance
             executionIds.append(res['execution-id'])
         executionCount = len(executionIds)
@@ -113,8 +107,7 @@ cat /tmp/{id}.output 2>/dev/null
                     state = res['state']
                     if state == 'completed':
                         completedIds.append(executionId)
-                        value = res['value'][res['type']]['value']
-                        value = value.split(delimeter)
+                        value = res['value'][res['type']]['value'].split(delimeter)
                         log = value[0]
                         err = value[1]
                         out = value[2].strip()

@@ -1,0 +1,6 @@
+docker pull nginx:latest
+docker tag nginx:latest 172.16.0.4:5000/vmk-nginx:origin
+docker push 172.16.0.4:5000/vmk-nginx:origin
+
+docker build -t 172.16.0.4:5000/vmk-nginx:1.0 .
+docker push 172.16.0.4:5000/vmk-nginx:1.0

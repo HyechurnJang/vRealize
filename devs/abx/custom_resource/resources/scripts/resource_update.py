@@ -25,23 +25,19 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # set default values
-    if 'instances' not in inputs: inputs['instances'] = []
-    if 'osType' not in inputs or not inputs['osType'] or inputs['osType'] not in ['linux', 'windows']: raise Exception('osType property must be one of linux or windows') # Required
-    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
-    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
-    if 'install' not in inputs: inputs['install'] = ''
-    if 'configure' not in inputs: inputs['configure'] = ''
-    if 'destroy' not in inputs: inputs['destroy'] = ''
-    
     id = inputs['id']
-    instances = inputs['instances']
     targets = inputs['targets']
+    instances = inputs['instances'] if 'instances' in inputs and inputs['instances'] else [] 
+    if 'osType' not in inputs or not inputs['osType'] or inputs['osType'] not in ['linux', 'windows']: raise Exception('osType property must be one of linux or windows') # Required
     osType = inputs['osType']
+    if 'username' not in inputs or not inputs['username']: raise Exception('username property must be required') # Required
     username = inputs['username']
+    if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
     password = inputs['password'] = context.getSecret(inputs['password'])
-    install = inputs['install']
-    configure = inputs['configure']
-    destroy = inputs['destroy']
+    install = inputs['install'] if 'install' in inputs and inputs['install'] else ''
+    configure = inputs['configure'] if 'configure' in inputs and inputs['configure'] else ''
+    destroy = inputs['destroy'] if 'destroy' in inputs and inputs['destroy'] else ''
+    delimeter = '__VRA_EXEC_DELIMETER__'
     
     print('[INFO] Update Scripts Description')
     print('properties.instances\n{}\n'.format(instances))
@@ -70,7 +66,12 @@ rm -rf /tmp/{id}.* 2>&1>/dev/null
 echo "{scripts}" | base64 -d | tee /tmp/{id}.sh >/dev/null
 chmod 755 /tmp/{id}.sh 2>&1>/dev/null
 /tmp/{id}.sh
-'''.format(id=id, scripts=scripts)
+cat /tmp/{id}.stdout 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.stderr | sed "s/^[/\\.].*{id}.sh: //g" 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.output 2>/dev/null
+'''.format(id=id, scripts=scripts, delimeter=delimeter)
         elif osType == 'windows':
             runScripts = destroy
         
@@ -78,7 +79,7 @@ chmod 755 /tmp/{id}.sh 2>&1>/dev/null
         executions = {}
         executionIds = []
         for instance in deleteInstances:
-            req = {
+            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
                 'async-execution': True,
                 'parameters': [{
                     'name': 'instance',
@@ -97,11 +98,30 @@ chmod 755 /tmp/{id}.sh 2>&1>/dev/null
                     'type': 'string',
                     'value': {'string': {'value': runScripts}}
                 }]
-            }
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
+            })
+            executions[res['execution-id']] = instance
+            executionIds.append(res['execution-id'])
+        executionCount = len(executionIds)
+        
+        completedIds = []
+        for _ in range(0, 300):
+            for executionId in executionIds:
+                if executionId not in completedIds:
+                    res = vra.get('/vco/api/actions/runs/' + executionId)
+                    state = res['state']
+                    if state == 'completed':
+                        completedIds.append(executionId)
+                        value = res['value'][res['type']]['value'].split(delimeter)
+                        log = value[0]
+                        err = value[1]
+                        out = value[2].strip()
+                        print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
+                    elif state == 'failed': raise Exception(res['error'])
+            if executionCount == len(completedIds): break
+            time.sleep(2)
+        else: raise Exception('scripts timeout')
     
     if instances and (install or configure):
-        delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
             createScripts = '''# Scripts
 exec 1>/tmp/{id}.stdout
@@ -121,7 +141,7 @@ echo "{delimeter}"
 cat /tmp/{id}.stderr | sed "s/^[/\\.].*{id}.sh: //g" 2>/dev/null
 echo "{delimeter}"
 cat /tmp/{id}.output 2>/dev/null
-'''.format(id=id, scripts=createScripts, delimeter=delimeter)
+'''.format(id=id, scripts=createScripts, delimeter=delimeter) if install or configure else ''
 
             updateScripts = '''# Scripts
 exec 1>/tmp/{id}.stdout
@@ -140,17 +160,23 @@ echo "{delimeter}"
 cat /tmp/{id}.stderr | sed "s/^[/\\.].*{id}.sh: //g" 2>/dev/null
 echo "{delimeter}"
 cat /tmp/{id}.output 2>/dev/null
-'''.format(id=id, scripts=updateScripts, delimeter=delimeter)
+'''.format(id=id, scripts=updateScripts, delimeter=delimeter) if configure else ''
 
         elif osType == 'windows':
-            runCreateScripts = install + '\n' + configure
-            runUpdateScripts = configure
+            runCreateScripts = install + '\n' + configure if install or configure else ''
+            runUpdateScripts = configure if configure else ''
         
         # update resource
         executions = {}
         executionIds = []
         for instance in instances:
-            req = {
+            if instance in targets:
+                if runUpdateScripts: runScripts = runUpdateScripts
+                else: continue
+            else:
+                if runCreateScripts: runScripts = runCreateScripts
+                else: continue
+            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
                 'async-execution': True,
                 'parameters': [{
                     'name': 'instance',
@@ -167,10 +193,9 @@ cat /tmp/{id}.output 2>/dev/null
                 },{
                     'name': 'scripts',
                     'type': 'string',
-                    'value': {'string': {'value': runUpdateScripts if instance in targets else runCreateScripts}}
+                    'value': {'string': {'value': runScripts}}
                 }]
-            }
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', req);
+            })
             executions[res['execution-id']] = instance
             executionIds.append(res['execution-id'])
         executionCount = len(executionIds)
@@ -184,8 +209,7 @@ cat /tmp/{id}.output 2>/dev/null
                     state = res['state']
                     if state == 'completed':
                         completedIds.append(executionId)
-                        value = res['value'][res['type']]['value']
-                        value = value.split(delimeter)
+                        value = res['value'][res['type']]['value'].split(delimeter)
                         log = value[0]
                         err = value[1]
                         out = value[2].strip()
@@ -198,7 +222,7 @@ cat /tmp/{id}.output 2>/dev/null
         
         if executionCount == 1: consoleOutputs = executionOuts[executionIds[0]]
         elif executionCount > 1: consoleOutputs = [executionOuts[executionId] for executionId in executionIds]
-        else: consoleOutputs = ''
+        else: consoleOutputs = inputs['outputs']
     else: consoleOutputs = ''
     
     # publish resource

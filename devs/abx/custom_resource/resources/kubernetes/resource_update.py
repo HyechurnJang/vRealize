@@ -19,6 +19,6 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 
 # Implement Handler Here
 def handler(context, inputs):
-    # publish null resource
-    return {}
+    # bypass resource
+    return inputs
 # __ABX_IMPLEMENTATIONS_END__
