@@ -10,7 +10,6 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
-_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -49,13 +48,13 @@ def handler(context, inputs):
         try: projectId = vra.get("/iaas/api/projects?$filter=(name eq 'ADMIN')")['content'][0]['id']
         except Exception as e: raise Exception('could not find project')
     
-    try : server = re.search('server: "(?P<value>https?://\w[\w\.]+(:\d+)?)"', kubeConfig)['value']
+    try : server = re.search('server: ["\']?(?P<value>https?://\w[\w\.]+(:\d+)?)["\']?', kubeConfig)['value']
     except Exception as e: raise Exception('could not find server')
-    try: ca = re.search('certificate-authority-data: "(?P<value>\w+\=*)"', kubeConfig)['value']
+    try: ca = re.search('certificate-authority-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
     except Exception as e: raise Exception('could not find certificate-authority-data')
     try:
-        cert = re.search('client-certificate-data: "(?P<value>\w+\=*)"', kubeConfig)['value']
-        key = re.search('client-key-data: "(?P<value>\w+\=*)"', kubeConfig)['value']
+        cert = re.search('client-certificate-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
+        key = re.search('client-key-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
     except Exception as e: raise Exception('could not find cert and key')
     
     # create resource

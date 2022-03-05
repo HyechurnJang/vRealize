@@ -42,20 +42,37 @@ def handler(context, inputs):
     install = inputs['install']
     configure = inputs['configure']
     destroy = inputs['destroy']
+    
+    print('[INFO] Update Scripts Description')
+    print('properties.instances\n{}\n'.format(instances))
+    print('properties.targets\n{}\n'.format(targets))
+    print('properties.osType\n{}\n'.format(osType))
+    print('properties.username\n{}\n'.format(username))
+    print('properties.password\n{}\n'.format(password))
+    print('properties.install\n{}\n'.format(install))
+    print('properties.configure\n{}\n'.format(configure))
+    print('properties.destroy\n{}\n'.format(destroy))
         
     deleteInstances = []
     for instance in targets:
         if instance not in instances: deleteInstances.append(instance)
     if deleteInstances and destroy:
-        delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
-            scripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + destroy
+            scripts = '''# Scripts
+exec 1>/tmp/{id}.stdout
+exec 2>/tmp/{id}.stderr
+output=/tmp/{id}.output
+{destroy}
+'''.format(id=id, destroy=destroy)
             scripts = base64.b64encode(scripts.encode('utf-8')).decode('utf-8')
-            postScripts = 'echo "' + delimeter + '"\ncat /tmp/' + id + '.err | sed "s/^[/\\.].*' + id + '.sh: //g" 2>/dev/null\necho "' + delimeter + '"\ncat /tmp/' + id + '.out 2>/dev/null\nrm -rf /tmp/' + id + '.* 2>&1>/dev/null\n'
-            runScripts = 'echo "' + scripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
+            runScripts = '''# Scripts
+rm -rf /tmp/{id}.* 2>&1>/dev/null
+echo "{scripts}" | base64 -d | tee /tmp/{id}.sh >/dev/null
+chmod 755 /tmp/{id}.sh 2>&1>/dev/null
+/tmp/{id}.sh
+'''.format(id=id, scripts=scripts)
         elif osType == 'windows':
-            scripts = destroy
-            runScripts = scripts
+            runScripts = destroy
         
         # delete resource
         executions = {}
@@ -86,18 +103,48 @@ def handler(context, inputs):
     if instances and (install or configure):
         delimeter = '__VRA_EXEC_DELIMETER__'
         if osType == 'linux':
-            createScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + install + '\n' + configure
-            updateScripts = 'Output=/tmp/' + id + '.out\nexec 2>/tmp/' + id + '.err\n' + configure
+            createScripts = '''# Scripts
+exec 1>/tmp/{id}.stdout
+exec 2>/tmp/{id}.stderr
+output=/tmp/{id}.output
+{install}
+{configure}
+'''.format(id=id, install=install, configure=configure)
             createScripts = base64.b64encode(createScripts.encode('utf-8')).decode('utf-8')
+            runCreateScripts = '''# Scripts
+rm -rf /tmp/{id}.* 2>&1>/dev/null
+echo "{scripts}" | base64 -d | tee /tmp/{id}.sh >/dev/null
+chmod 755 /tmp/{id}.sh 2>&1>/dev/null
+/tmp/{id}.sh
+cat /tmp/{id}.stdout 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.stderr | sed "s/^[/\\.].*{id}.sh: //g" 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.output 2>/dev/null
+'''.format(id=id, scripts=createScripts, delimeter=delimeter)
+
+            updateScripts = '''# Scripts
+exec 1>/tmp/{id}.stdout
+exec 2>/tmp/{id}.stderr
+output=/tmp/{id}.output
+{configure}
+'''.format(id=id, configure=configure)
             updateScripts = base64.b64encode(updateScripts.encode('utf-8')).decode('utf-8')
-            postScripts = 'echo "' + delimeter + '"\ncat /tmp/' + id + '.err | sed "s/^[/\\.].*' + id + '.sh: //g" 2>/dev/null\necho "' + delimeter + '"\ncat /tmp/' + id + '.out 2>/dev/null\nrm -rf /tmp/' + id + '.* 2>&1>/dev/null\n'
-            runCreateScripts = 'echo "' + createScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
-            runUpdateScripts = 'echo "' + updateScripts + '" | base64 -d | tee /tmp/' + id + '.sh >/dev/null\nchmod 755 /tmp/' + id + '.sh 2>&1>/dev/null\n/tmp/' + id + '.sh\n' + postScripts
+            runUpdateScripts = '''# Scripts
+rm -rf /tmp/{id}.* 2>&1>/dev/null
+echo "{scripts}" | base64 -d | tee /tmp/{id}.sh >/dev/null
+chmod 755 /tmp/{id}.sh 2>&1>/dev/null
+/tmp/{id}.sh
+cat /tmp/{id}.stdout 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.stderr | sed "s/^[/\\.].*{id}.sh: //g" 2>/dev/null
+echo "{delimeter}"
+cat /tmp/{id}.output 2>/dev/null
+'''.format(id=id, scripts=updateScripts, delimeter=delimeter)
+
         elif osType == 'windows':
-            createScripts = install + '\n' + configure
-            updateScripts = configure
-            runCreateScripts = createScripts
-            runUpdateScripts = updateScripts
+            runCreateScripts = install + '\n' + configure
+            runUpdateScripts = configure
         
         # update resource
         executions = {}
@@ -130,7 +177,7 @@ def handler(context, inputs):
         
         completedIds = []
         executionOuts = {}
-        for i in range(0, 180):
+        for _ in range(0, 300):
             for executionId in executionIds:
                 if executionId not in completedIds:
                     res = vra.get('/vco/api/actions/runs/' + executionId)
@@ -141,12 +188,12 @@ def handler(context, inputs):
                         value = value.split(delimeter)
                         log = value[0]
                         err = value[1]
-                        out = value[2]
+                        out = value[2].strip()
                         executionOuts[executionId] = out
-                        print('<update instance="{}">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
+                        print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
                     elif state == 'failed': raise Exception(res['error'])
             if executionCount == len(completedIds): break
-            time.sleep(5)
+            time.sleep(2)
         else: raise Exception('scripts timeout')
         
         if executionCount == 1: consoleOutputs = executionOuts[executionIds[0]]

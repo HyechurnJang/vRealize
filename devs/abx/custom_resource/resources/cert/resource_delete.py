@@ -20,5 +20,6 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 # Implement Handler Here
 def handler(context, inputs):
     # bypass resource
+    inputs['password'] = context.getSecret(inputs['password'])
     return inputs
 # __ABX_IMPLEMENTATIONS_END__

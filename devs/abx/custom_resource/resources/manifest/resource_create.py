@@ -10,7 +10,6 @@ import manifest
 sys.path.insert(0, '../../common')
 _module = importlib.import_module(manifest.sdk)
 for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.__getattribute__(exportObject)
-_NEWLINE_ = '\n'
 
 # __ABX_IMPLEMENTATIONS_START__
 #===============================================================================
@@ -69,7 +68,7 @@ def handler(context, inputs):
     for yml in manifest.strip().split('---'):
         if yml:
             innerMetadata = False
-            for line in yml.strip().split(_NEWLINE_):
+            for line in yml.strip().split('\n'):
                 if innerMetadata:
                     if 'name:' in line:
                         metaName = line.split('name:')[1].strip()

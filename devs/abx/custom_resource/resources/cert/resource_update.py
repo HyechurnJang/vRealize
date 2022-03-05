@@ -37,13 +37,21 @@ def handler(context, inputs):
     username = inputs['username']
     password = inputs['password'] = context.getSecret(inputs['password'])
     
+    print('[INFO] Create Cert Description')
+    print('properties.instances\n{}\n'.format(instances))
+    print('properties.targets\n{}\n'.format(targets))
+    print('properties.username\n{}\n'.format(username))
+    print('properties.password\n{}\n'.format(password))
+    print('properties.privateKey\n{}\n'.format(privateKey))
+    
     b64Key = base64.b64encode(privateKey.encode('utf-8')).decode('utf-8')
-    scripts = """# Register Cert
+    scripts = '''# Scripts
 mkdir -p ~/.ssh
 echo "{}" | base64 -d | tee ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 ssh-keygen -f ~/.ssh/id_rsa -y >> ~/.ssh/authorized_keys
-""".format(b64Key)
+chmod 600 ~/.ssh/authorized_keys
+'''.format(b64Key)
     
     # update resource
     executions = {}
@@ -76,7 +84,7 @@ ssh-keygen -f ~/.ssh/id_rsa -y >> ~/.ssh/authorized_keys
     executionCount = len(executionIds)
     
     completedIds = []
-    for _ in range(0, 180):
+    for _ in range(0, 150):
         for executionId in executionIds:
             if executionId not in completedIds:
                 res = vra.get('/vco/api/actions/runs/' + executionId)
@@ -86,7 +94,7 @@ ssh-keygen -f ~/.ssh/id_rsa -y >> ~/.ssh/authorized_keys
                     print('<create instance="{}" resource="cert">{}</create>'.format(executions[executionId], privateKey))
                 elif state == 'failed': raise Exception(res['error'])
         if executionCount == len(completedIds): break
-        time.sleep(5)
+        time.sleep(2)
     else: raise Exception('scripts timeout')
     
     # publish resource
