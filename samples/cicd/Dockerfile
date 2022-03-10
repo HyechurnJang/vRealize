@@ -1,2 +1,2 @@
-FROM reg.vmkloud.com:5000/vmk-nginx:origin
+FROM 172.16.1.35/tkgs-vra-clusters/vmk-nginx:origin
 COPY index.html /usr/share/nginx/html

@@ -11,10 +11,6 @@ inputs:
 resources:
   lb:
     type: Cloud.LoadBalancer
-    metadata:
-      layoutPosition:
-        - 0
-        - 0
     properties:
       network: '${resource.net.id}'
       instances: '${resource.vm[*].id}'
@@ -34,10 +30,6 @@ resources:
             healthyThreshold: 2
   vm:
     type: Cloud.Machine
-    metadata:
-      layoutPosition:
-        - 0
-        - 1
     properties:
       count: '${input.count}'
       image: ubuntu20
@@ -67,10 +59,6 @@ resources:
           - rm -rf /opt/init.sh
   net:
     type: Cloud.Network
-    metadata:
-      layoutPosition:
-        - 1
-        - 0
     properties:
       networkType: existing
       constraints:
