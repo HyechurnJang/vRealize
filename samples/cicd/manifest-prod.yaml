@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vmk-app
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyIxNzIuMTYuMS4zNSI6eyJ1c2VybmFtZSI6ImphbmdoIiwicGFzc3dvcmQiOiJEYXZpZCojODA5MCIsImF1dGgiOiJhbUZ1WjJnNlJHRjJhV1FxSXpnd09UQT0ifX19
+kind: Secret
+metadata:
+  name: harbor-vmkloud-com
+  namespace: vmk-app
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmk-nginx
+  namespace: vmk-app
+spec:
+  selector:
+    matchLabels:
+      run: vmk-nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: vmk-nginx
+    spec:
+      containers:
+      - name: vmk-nginx
+        image: 172.16.1.35/tkgs-vra-clusters/vmk-nginx:$${TAG_VER}
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: harbor-vmkloud-com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmk-nginx
+  namespace: vmk-app
+  labels:
+    run: vmk-nginx
+spec:
+  type: LoadBalancer
+  ports:
+  - name: vmk-nginx-http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    run: vmk-nginx
