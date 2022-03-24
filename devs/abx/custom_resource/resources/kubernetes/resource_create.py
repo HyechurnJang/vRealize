@@ -17,6 +17,8 @@ for exportObject in _module.exportObjects: __builtins__[exportObject] = _module.
 #===============================================================================
 # Import Libraries Here
 import re
+import uuid
+import time
 
 # Implement Handler Here
 def handler(context, inputs):
@@ -25,6 +27,7 @@ def handler(context, inputs):
     
     # set default values
     if 'name' not in inputs or not inputs['name']: raise Exception('name property must be required') # Required
+    name = inputs['name']
     if 'clusterType' not in inputs or not inputs['clusterType'] or inputs['clusterType'] not in ['tanzu', 'external']: raise Exception('clusterType property must be required') # Required
     if inputs['clusterType'] == 'tanzu':
         if 'cluster' not in inputs or not inputs['cluster']: raise Exception('cluster property must be required') # Required
@@ -56,12 +59,14 @@ def handler(context, inputs):
         cert = re.search('client-certificate-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
         key = re.search('client-key-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
     except Exception as e: raise Exception('could not find cert and key')
+    if inputs['clusterManifest'] not in inputs or not inputs['clusterManifest']: inputs['clusterManifest'] = ''
+    clusterManifest = inputs['clusterManifest']
     
     # create resource
     if inputs['clusterType'] == 'external':
         cluster = '/cmx/api/resources/k8s/clusters/' + vra.post('/cmx/api/resources/k8s/clusters', {
             'project': projectId,
-            'name': inputs['name'],
+            'name': name,
             'address': server,
             'clusterType': 'EXTERNAL',
             'caCertificate': ca,
@@ -74,7 +79,7 @@ def handler(context, inputs):
     
     req = {
         'project': projectName,
-        'name': inputs['name'],
+        'name': name,
         'type': 'k8s',
         'isRestricted': False,
         'properties': {
@@ -88,6 +93,67 @@ def handler(context, inputs):
     }
     vra.post('/codestream/api/endpoint-validation', req)
     resource = vra.post('/codestream/api/endpoints', req)
+    
+    if clusterManifest:
+        pipeline = vra.post('/codestream/api/pipelines', {
+            'project': projectId,
+            'kind': 'PIPELINE',
+            'name': '{}-{}'.format(name, str(uuid.uuid4())),
+            'description': 'kubernetes-initial-manifest',
+            'enabled': True,
+            'concurrency': 1,
+            'input': {'method': ''},
+            'output': {},
+            'starred': {},
+            'stageOrder': ['Config'],
+            'stages': {
+                'Config': {
+                    'taskOrder': [['Initial']],
+                    'tasks': {
+                        'Initial': {
+                            'type': 'K8S',
+                            'ignoreFailure': True,
+                            'preCondition': '',
+                            'input': {
+                                'action': 'APPLY',
+                                'timeout': 15,
+                                'filePath': '',
+                                'scmConstants': {},
+                                'yaml': clusterManifest
+                            },
+                            'endpoints': {'kubernetesServer': name},
+                            'tags': [],
+                            '_configured': True
+                        }
+                    },
+                    'tags': []    
+                }
+            },
+            'notifications': {'email': [], 'jira': [], 'webhook': []},
+            'options': [],
+            'workspace': {
+                'image': '',
+                'path': '',
+                'type': 'DOCKER',
+                'endpoint': '',
+                'customProperties': {},
+                'cache': [],
+                'registry': '',
+                'limits': {'cpu': 1.0, 'memory': 512},
+                'autoCloneForTrigger': False,
+                'environmentVariables': {}
+            },
+            '_inputMeta': {'method': {'description': '', 'mandatory': True}},
+            '_outputMeta': {},
+            '_warnings': [],
+            'rollbacks': [],
+            'tags': []
+        })
+        
+        vra.patch('/codestream/api/pipelines/' + pipeline['id'], {'state': 'ENABLED'})
+        vra.post('/codestream/api/pipelines/{}/executions'.format(pipeline['id']), {})
+        time.sleep(1)
+        vra.delete('/codestream/api/pipelines/' + pipeline['id'])
     
     # publish resource
     outputs = inputs

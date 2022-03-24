@@ -50,5 +50,11 @@ properties = {
         'title': 'Kubernetes Config',
         'default': '',
         'description': 'Kube-Config of External Cluster'
+    },
+    'clusterManifest': {
+        'type': 'string',
+        'title': 'Cluster Manifest',
+        'default': '',
+        'description': 'Manifest for Initial Cluster Config'
     }
 }

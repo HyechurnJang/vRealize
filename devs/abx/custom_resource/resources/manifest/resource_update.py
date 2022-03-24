@@ -141,7 +141,7 @@ def handler(context, inputs):
     vra.put('/codestream/api/pipelines/' + resourceId, resource)
     
     ## change state to enabled
-    vra.patch('/codestream/api/pipelines/' + resourceId, {'state': 'ENABLED'});
+    vra.patch('/codestream/api/pipelines/' + resourceId, {'state': 'ENABLED'})
     
     ## execute apply method on pipeline
     try: executionLink = vra.post('/codestream/api/pipelines/{}/executions'.format(resourceId), {'input': {'method': 'apply'}})['executionLink']

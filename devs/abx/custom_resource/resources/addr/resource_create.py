@@ -63,7 +63,7 @@ def handler(context, inputs):
     # create resource
     computeNetwork = vra.get('/provisioning/uerp' + network)
     for subnetRange in vra.get("/provisioning/uerp/resources/subnet-ranges?expand&$filter=(subnetLink eq '{}')".format(computeNetwork['subnetLink']))['documents'].values():
-        subnetRangeLink = subnetRange['documentSelfLink'];
+        subnetRangeLink = subnetRange['documentSelfLink']
         unAvailable = []
         for ipAddress in vra.get("/provisioning/uerp/resources/ip-addresses?expand&$filter=((subnetRangeLink eq '{}') and (ipAddressStatus ne 'AVAILABLE'))".format(subnetRangeLink))['documents'].values():
             unAvailable.append(changeIp2Num(ipAddress['ipAddress']))
