@@ -96,7 +96,7 @@ def handler(context, inputs):
     
     if clusterManifest:
         pipeline = vra.post('/codestream/api/pipelines', {
-            'project': projectId,
+            'project': projectName,
             'kind': 'PIPELINE',
             'name': '{}-{}'.format(name, str(uuid.uuid4())),
             'description': 'kubernetes-initial-manifest',
@@ -108,7 +108,7 @@ def handler(context, inputs):
             'stageOrder': ['Config'],
             'stages': {
                 'Config': {
-                    'taskOrder': [['Initial']],
+                    'taskOrder': ['Initial'],
                     'tasks': {
                         'Initial': {
                             'type': 'K8S',
@@ -151,9 +151,24 @@ def handler(context, inputs):
         })
         
         vra.patch('/codestream/api/pipelines/' + pipeline['id'], {'state': 'ENABLED'})
-        vra.post('/codestream/api/pipelines/{}/executions'.format(pipeline['id']), {})
-        time.sleep(1)
-        vra.delete('/codestream/api/pipelines/' + pipeline['id'])
+        try: executionLink = vra.post('/codestream/api/pipelines/{}/executions'.format(pipeline['id']), {'input': {}})['executionLink']
+        except: 
+            try: vra.delete('/codestream/api/pipelines/' + pipeline['id'])
+            except: pass
+        for _ in range(0, 300):
+            execution = vra.get(executionLink)
+            if execution['status'] == 'COMPLETED': break
+            elif execution['status'] == 'FAILED':
+                try: vra.delete('/codestream/api/pipelines/' + pipeline['id'])
+                except: pass
+                raise Exception('cluster manifest execution failed : ' + execution['statusMessage'])
+            time.sleep(3)
+        else:
+            try: vra.delete('/codestream/api/pipelines/' + pipeline['id'])
+            except: pass
+            raise Exception('cluster manifest execution might be stuck over 15 min')
+        try: vra.delete('/codestream/api/pipelines/' + pipeline['id'])
+        except: pass
     
     # publish resource
     outputs = inputs
