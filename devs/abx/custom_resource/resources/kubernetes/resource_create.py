@@ -59,7 +59,7 @@ def handler(context, inputs):
         cert = re.search('client-certificate-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
         key = re.search('client-key-data: ["\']?(?P<value>\w+\=*)["\']?', kubeConfig)['value']
     except Exception as e: raise Exception('could not find cert and key')
-    if inputs['clusterManifest'] not in inputs or not inputs['clusterManifest']: inputs['clusterManifest'] = ''
+    if 'clusterManifest' not in inputs or not inputs['clusterManifest']: inputs['clusterManifest'] = ''
     clusterManifest = inputs['clusterManifest']
     
     # create resource
