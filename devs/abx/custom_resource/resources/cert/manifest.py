@@ -49,19 +49,4 @@ properties = {
         'maximum': 8192,
         'description': 'Key Size Bits'
     },
-    'targets': {
-        'type': 'array',
-        'title': 'Targets',
-        'readOnly': True,
-        'items': {
-            'type': 'string'
-        },
-        'default': []
-    },
-    'privateKey': {
-        'type': 'string',
-        'title': 'Outputs',
-        'readOnly': True,
-        'default': ''
-    },
 }

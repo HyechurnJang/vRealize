@@ -68,14 +68,6 @@ properties = {
     },
     'targets': {
         'type': 'array',
-        'title': 'Instances',
-        'readOnly': True,
-        'items': {
-            'type': 'string'
-        }
-    },
-    'targets': {
-        'type': 'array',
         'title': 'Targets',
         'readOnly': True,
         'items': {
