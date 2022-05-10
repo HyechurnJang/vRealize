@@ -66,4 +66,27 @@ properties = {
         'default': '',
         'description': 'run script when destroyed',
     },
+    'targets': {
+        'type': 'array',
+        'title': 'Instances',
+        'readOnly': True,
+        'items': {
+            'type': 'string'
+        }
+    },
+    'targets': {
+        'type': 'array',
+        'title': 'Targets',
+        'readOnly': True,
+        'items': {
+            'type': 'string'
+        },
+        'default': []
+    },
+    'outputs': {
+        'type': 'string',
+        'title': 'Outputs',
+        'readOnly': True,
+        'default': ''
+    },
 }

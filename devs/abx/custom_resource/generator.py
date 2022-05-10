@@ -7,7 +7,7 @@ Created on 2021. 12. 15.
 #===============================================================================
 # Generator Settings
 #===============================================================================
-installerName = 'installer_name_here'
+installerName = 'vraPackageInstaller'
 
 constants = {
     #===========================================================================
@@ -24,16 +24,15 @@ constants = {
 
 resources = [
     #===========================================================================
-    # 'project',
-    # 'deployment',
-    # 'vpz',
-    # 'addr',
-    # 'kubernetes',
-    # 'pipeline',
-    # 'code',
-    # 'script',
-    # 'cert',
-    # 'data',
+    'addr',
+    'cert',
+    'deployment',
+    'kubernetes',
+    'manifest',
+    'project',
+    'scripts',
+    'ssh',
+    'vpz',
     #===========================================================================
 ]
 
@@ -49,6 +48,9 @@ import datetime
 
 REGEX = r'# __ABX_IMPLEMENTATIONS_START__[\r\n]+(?P<text>[\W\w\r\n]+)[\r\n]+# __ABX_IMPLEMENTATIONS_END__'
 
+TEXTILE = '''
+'''
+
 with open('common/installer.py', 'r') as fd: installer = re.findall(REGEX, fd.read())[0]
 
 descriptions = {}
@@ -60,10 +62,12 @@ for resource in resources:
         'properties': manifest.properties,
     }
     with open('common/{}.py'.format(manifest.sdk), 'r') as fd: desc['sdk'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_create.py'.format(resource), 'r') as fd: desc['createHandler'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_read.py'.format(resource), 'r') as fd: desc['readHandler'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_update.py'.format(resource), 'r') as fd: desc['updateHandler'] = re.findall(REGEX, fd.read())[0]
-    with open('resources/{}/resource_delete.py'.format(resource), 'r') as fd: desc['deleteHandler'] = re.findall(REGEX, fd.read())[0]
+    with open('resources/{}/resource_create.py'.format(resource), 'r') as fd: desc['createHandler'] = re.findall(REGEX, fd.read())[0].replace('\\', '\\\\')
+    with open('resources/{}/resource_read.py'.format(resource), 'r') as fd: desc['readHandler'] = re.findall(REGEX, fd.read())[0].replace('\\', '\\\\')
+    try:
+        with open('resources/{}/resource_update.py'.format(resource), 'r') as fd: desc['updateHandler'] = re.findall(REGEX, fd.read())[0].replace('\\', '\\\\')
+    except: pass
+    with open('resources/{}/resource_delete.py'.format(resource), 'r') as fd: desc['deleteHandler'] = re.findall(REGEX, fd.read())[0].replace('\\', '\\\\')
     descriptions[manifest.name] = desc
 
 os.makedirs('dist', exist_ok=True)
@@ -89,22 +93,23 @@ constDescs = %s
 rscDescs = {
 ''')
     for name, desc in descriptions.items():
-        fd.write("""'%s': {
+        fd.write(''''%s': {
     'inputs': %s,
     'properties': %s,
-    'sdk': '''%s''',
-    'createHandler': '''%s''',
-    'readHandler': '''%s''',
-    'deleteHandler': '''%s''',
-""" % (
+    'sdk': """%s\n%s""",
+    'createHandler': """%s""",
+    'readHandler': """%s""",
+    'deleteHandler': """%s""",
+''' % (
     name,
     desc['inputs'],
     desc['properties'],
     desc['sdk'],
+    TEXTILE,
     desc['createHandler'],
     desc['readHandler'],
     desc['deleteHandler']))
-        if 'updateHandler' in desc: fd.write("""    'updateHandler': '''%s''',""" % desc['updateHandler'])
+        if 'updateHandler' in desc: fd.write('''    'updateHandler': """%s""",''' % desc['updateHandler'])
         fd.write('''
 },
 ''')
@@ -129,6 +134,7 @@ entrypoint: "handler"
 timeoutSeconds: 600
 deploymentTimeoutSeconds: 900
 actionType: "SCRIPT"
+provider: "on-prem"
 memoryInMB: 300
 inputs:
   vraHostname: ""
