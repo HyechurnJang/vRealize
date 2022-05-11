@@ -23,6 +23,9 @@ def handler(context, inputs):
     vra = VraManager(context, inputs)
     
     # delete resource
+    resource = vra.get('/iaas/api/projects/' + inputs['id'])
+    resource['zoneAssignmentConfigurations'] = []
+    vra.patch('/iaas/api/projects/' + inputs['id'], resource)
     vra.delete('/iaas/api/projects/' + inputs['id'])
     
     # publish resource
