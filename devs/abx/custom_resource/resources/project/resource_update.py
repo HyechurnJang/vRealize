@@ -45,7 +45,7 @@ def handler(context, inputs):
     resource['administrators'] = [{'type': 'user', 'email': account} for account in inputs['administrators']]
     resource['members'] = [{'type': 'user', 'email': account} for account in inputs['members']]
     resource['viewers'] = [{'type': 'user', 'email': account} for account in inputs['viewers']]
-    resource['zones'] = [{'zoneId': zoneId} for zoneId in inputs['zones']]
+    resource['zoneAssignmentConfigurations'] = [{'zoneId': zoneId} for zoneId in inputs['zones']]
     resource['placementPolicy'] = inputs['placementPolicy'].upper()
     resource['customProperties'] = inputs['customProperties']
     resource['machineNamingTemplate'] = inputs['machineNamingTemplate']

@@ -43,7 +43,7 @@ def handler(context, inputs):
         'administrators': [{'type': 'user', 'email': account} for account in inputs['administrators']],
         'members': [{'type': 'user', 'email': account} for account in inputs['members']],
         'viewers': [{'type': 'user', 'email': account} for account in inputs['viewers']],
-        'zones': [{'zoneId': zoneId} for zoneId in inputs['zones']],
+        'zoneAssignmentConfigurations': [{'zoneId': zoneId} for zoneId in inputs['zones']],
         'placementPolicy': inputs['placementPolicy'].upper(),
         'customProperties': inputs['customProperties'],
         'machineNamingTemplate': inputs['machineNamingTemplate'],
