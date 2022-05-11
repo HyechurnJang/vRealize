@@ -29,17 +29,18 @@ def handler(context, inputs):
     for deployment in deployments:
         deploymentIds.append(deployment['id'])
         vra.delete('/deployment/api/deployments/{}'.format(deployment['id']))
-    if deploymentIds: time.sleep(2)
-    while deploymentIds:
-        for deploymentId in deploymentIds:
-            try: deployment = vra.get('/deployment/api/deployments/' + deploymentId)
-            except:
-                deploymentIds.remove(deploymentId)
-                break
-            if deployment['status'] == 'DELETE_INPROGRESS': continue
-            else:
-                raise Exception('could not delete deployment : {}'.format(deploymentId))
-        else: time.sleep(5)
+    if deploymentIds:
+        time.sleep(2)
+        while deploymentIds:
+            for deploymentId in deploymentIds:
+                try: deployment = vra.get('/deployment/api/deployments/' + deploymentId)
+                except:
+                    deploymentIds.remove(deploymentId)
+                    break
+                if deployment['status'] == 'DELETE_INPROGRESS': continue
+                else:
+                    raise Exception('could not delete deployment : {}'.format(deploymentId))
+            else: time.sleep(5)
     
     resource = vra.get('/iaas/api/projects/' + inputs['id'])
     resource['zoneAssignmentConfigurations'] = []
