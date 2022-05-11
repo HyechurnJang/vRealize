@@ -30,7 +30,7 @@ properties = {
     },
     'address': {
         'type': 'string',
-        'title': 'title_here',
+        'title': 'Address',
         'default': '',
         'recreateOnUpdate': True,
         'description': 'Network address specified',
