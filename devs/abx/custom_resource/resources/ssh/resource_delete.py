@@ -33,6 +33,7 @@ def handler(context, inputs):
     username = inputs['username']
     if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
     password = inputs['password'] = context.getSecret(inputs['password'])
+    sync = inputs['sync'] if 'sync' in inputs and inputs['sync'] in [True, False] else True
     destroy = inputs['destroy'] if 'destroy' in inputs and inputs['destroy'] else ''
     delimeter = '__VRA_EXEC_DELIMETER__'
     
@@ -87,22 +88,22 @@ cat /tmp/{id}.output 2>/dev/null
                 'value': {'string': {'value': runCommands}}
             }]
         })
-        executionId = res['execution-id']
         
-        for _ in range(0, 300):
-            res = vra.get('/vco/api/actions/runs/' + executionId)
-            state = res['state']
-            if state == 'completed':
-                value = res['value'][res['type']]['value'].split(delimeter)
-                log = value[0]
-                error = value[1]
-                output = value[2].strip()
-                print('<delete resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</delete>'.format(address, port, log, error, output))
-                break
-            elif state == 'failed': raise Exception(res['error'])
-            time.sleep(2)
-        else: raise Exception('commands timeout')
-    else: output = ''
+        if sync:
+            executionId = res['execution-id']
+            for _ in range(0, 300):
+                res = vra.get('/vco/api/actions/runs/' + executionId)
+                state = res['state']
+                if state == 'completed':
+                    value = res['value'][res['type']]['value'].split(delimeter)
+                    log = value[0]
+                    error = value[1]
+                    output = value[2].strip()
+                    print('<delete resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</delete>'.format(address, port, log, error, output))
+                    break
+                elif state == 'failed': raise Exception(res['error'])
+                time.sleep(2)
+            else: raise Exception('commands timeout')
     
     # publish resource
     return {}

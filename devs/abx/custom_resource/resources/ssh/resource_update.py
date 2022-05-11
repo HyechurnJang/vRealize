@@ -33,7 +33,9 @@ def handler(context, inputs):
     username = inputs['username']
     if 'password' not in inputs or not inputs['password']: raise Exception('password property must be required') # Required
     password = inputs['password'] = context.getSecret(inputs['password'])
+    sync = inputs['sync'] if 'sync' in inputs and inputs['sync'] in [True, False] else True
     update = inputs['update'] if 'update' in inputs and inputs['update'] else ''
+    inputs['output'] = ''
     delimeter = '__VRA_EXEC_DELIMETER__'
     
     print('[INFO] Update Description')
@@ -87,26 +89,29 @@ cat /tmp/{id}.output 2>/dev/null
                 'value': {'string': {'value': runCommands}}
             }]
         })
-        executionId = res['execution-id']
         
-        for _ in range(0, 300):
-            res = vra.get('/vco/api/actions/runs/' + executionId)
-            state = res['state']
-            if state == 'completed':
-                value = res['value'][res['type']]['value'].split(delimeter)
-                log = value[0]
-                error = value[1]
-                output = value[2].strip()
-                print('<update resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</update>'.format(address, port, log, error, output))
-                break
-            elif state == 'failed': raise Exception(res['error'])
-            time.sleep(2)
-        else: raise Exception('commands timeout')
-    else: output = ''
+        if sync:
+            executionId = res['execution-id']
+            for _ in range(0, 300):
+                res = vra.get('/vco/api/actions/runs/' + executionId)
+                state = res['state']
+                if state == 'completed':
+                    value = res['value'][res['type']]['value'].split(delimeter)
+                    log = value[0]
+                    error = value[1]
+                    output = value[2].strip()
+                    print('<update resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</update>'.format(address, port, log, error, output))
+                    inputs['output'] = output
+                    break
+                elif state == 'failed': raise Exception(res['error'])
+                time.sleep(2)
+            else: raise Exception('commands timeout')
+        else:
+            inputs['executionId'] = res['execution-id']
+            inputs['output'] = ''
     
     # publish resource
     outputs = inputs
     outputs.pop('VraManager')
-    outputs['output'] = output
     return outputs
 # __ABX_IMPLEMENTATIONS_END__

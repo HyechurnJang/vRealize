@@ -13,6 +13,7 @@ inputs = {
         'VraManager': 'constant'
     },
     'read': {
+        'VraManager': 'constant'
     },
     'update': {
         'VraManager': 'constant'
@@ -44,6 +45,12 @@ properties = {
         'title': 'Password',
         'encrypted': True,
         'description': 'password in host to run scripts'
+    },
+    'sync': {
+        'type': 'boolean',
+        'title': 'Sync Task',
+        'default': True,
+        'description': 'run commands as sync'
     },
     'create': {
         'type': 'string',
