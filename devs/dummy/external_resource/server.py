@@ -31,7 +31,7 @@ def read_external_resource(req, id=''):
 def update_external_resource(req, id):
     data = DATA[id]
     if 'name' in req.data: data['name'] = req.data['name']
-    if 'desc' in req.data: data['description'] = req.data['description']
+    if 'desc' in req.data: data['desc'] = req.data['desc']
     return data
 
 @rest('DELETE', '/external/resource')
