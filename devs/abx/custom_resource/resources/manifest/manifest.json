@@ -1,0 +1,83 @@
+{
+	"name": "Manifest",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+			"VraManager"
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"name": {
+			"type": "string",
+			"title": "Name",
+			"recreateOnUpdate": true,
+			"description": "Pipeline name"
+		},
+		"kubernetes": {
+			"type": "string",
+			"title": "Kubernetes",
+			"recreateOnUpdate": true,
+			"description": "Kubernetes cluster"
+		},
+		"manifest": {
+			"type": "string",
+			"title": "Manifest",
+			"description": "Manifest text"
+		},
+		"pipeConfig": {
+			"type": "object",
+			"title": "Pipeline Config",
+			"default": {
+			},
+			"properties": {
+				"orders": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"order": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": [
+					]
+				},
+				"properties": {
+					"type": "object",
+					"title": "Properties",
+					"default": {
+					}
+				}
+			},
+			"description": "Manifest pipeline config"
+		},
+		"persistence": {
+			"type": "boolean",
+			"title": "Pipeline Persistence",
+			"default": false,
+			"recreateOnUpdate": true,
+			"description": "Pipeline persistence option when resource deleted"
+		}
+	}
+}

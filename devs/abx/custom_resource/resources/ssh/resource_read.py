@@ -28,18 +28,24 @@ def handler(context, inputs):
     sync = inputs['sync'] if 'sync' in inputs and inputs['sync'] in [True, False] else True
     executionId = inputs['executionId'] if 'executionId' in inputs and inputs['executionId'] else ''
         
-    if not sync and executionId:
+    if not sync and executionId and inputs['state'] == 'Running':
         delimeter = '__VRA_EXEC_DELIMETER__'
-        res = vra.get('/vco/api/actions/runs/' + executionId)
-        state = res['state']
-        if state == 'completed':
-            value = res['value'][res['type']]['value'].split(delimeter)
-            log = value[0]
-            error = value[1]
-            output = value[2].strip()
-            print('<sync resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</sync>'.format(address, port, log, error, output))
-            inputs['output'] = output
-    
+        res = vra.get('/vco/api/workflows/7f6f952b-3254-4a38-8872-fc3082c01bd5/executions/' + executionId + '/state')
+        state = res['value']
+        if state != 'running':
+            res = vra.get('/vco/api/workflows/7f6f952b-3254-4a38-8872-fc3082c01bd5/executions/' + executionId)
+            if state == 'completed':
+                value = res['output-parameters'][0]['value']['string']['value'].split(delimeter)
+                log = value[0]
+                error = value[1]
+                output = value[2].strip()
+                print('<sync resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</sync>'.format(address, port, log, error, output))
+                inputs['output'] = output
+                inputs['state'] = 'Completed'
+            elif state == 'failed':
+                inputs['output'] = res['content-exception']
+                inputs['state'] = 'Failed'
+
     # publish resource
     outputs = inputs
     outputs.pop('VraManager')

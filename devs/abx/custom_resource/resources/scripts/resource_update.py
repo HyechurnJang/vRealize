@@ -79,10 +79,9 @@ cat /tmp/{id}.output 2>/dev/null
         executions = {}
         executionIds = []
         for instance in deleteInstances:
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
-                'async-execution': True,
+            res = vra.post('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions', {
                 'parameters': [{
-                    'name': 'instance',
+                    'name': 'vmLink',
                     'type': 'string',
                     'value': {'string': {'value': instance}}
                 },{
@@ -99,24 +98,26 @@ cat /tmp/{id}.output 2>/dev/null
                     'value': {'string': {'value': runScripts}}
                 }]
             })
-            executions[res['execution-id']] = instance
-            executionIds.append(res['execution-id'])
+            executions[res['id']] = instance
+            executionIds.append(res['id'])
         executionCount = len(executionIds)
         
         completedIds = []
         for _ in range(0, 300):
             for executionId in executionIds:
                 if executionId not in completedIds:
-                    res = vra.get('/vco/api/actions/runs/' + executionId)
-                    state = res['state']
-                    if state == 'completed':
-                        completedIds.append(executionId)
-                        value = res['value'][res['type']]['value'].split(delimeter)
-                        log = value[0]
-                        err = value[1]
-                        out = value[2].strip()
-                        print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
-                    elif state == 'failed': raise Exception(res['error'])
+                    res = vra.get('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions/' + executionId + '/state')
+                    state = res['value']
+                    if state != 'running':
+                        res = vra.get('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions/' + executionId)
+                        if state == 'completed':
+                            completedIds.append(executionId)
+                            value = res['output-parameters'][0]['value']['string']['value'].split(delimeter)
+                            log = value[0]
+                            err = value[1]
+                            out = value[2].strip()
+                            print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
+                        elif state == 'failed': raise Exception(res['content-exception'])
             if executionCount == len(completedIds): break
             time.sleep(2)
         else: raise Exception('scripts timeout')
@@ -176,10 +177,9 @@ cat /tmp/{id}.output 2>/dev/null
             else:
                 if runCreateScripts: runScripts = runCreateScripts
                 else: continue
-            res = vra.post('/vco/api/actions/fc35fa64-13ec-4fa1-8273-5d1d963521ef/executions', {
-                'async-execution': True,
+            res = vra.post('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions', {
                 'parameters': [{
-                    'name': 'instance',
+                    'name': 'vmLink',
                     'type': 'string',
                     'value': {'string': {'value': instance}}
                 },{
@@ -196,8 +196,8 @@ cat /tmp/{id}.output 2>/dev/null
                     'value': {'string': {'value': runScripts}}
                 }]
             })
-            executions[res['execution-id']] = instance
-            executionIds.append(res['execution-id'])
+            executions[res['id']] = instance
+            executionIds.append(res['id'])
         executionCount = len(executionIds)
         
         completedIds = []
@@ -205,17 +205,19 @@ cat /tmp/{id}.output 2>/dev/null
         for _ in range(0, 300):
             for executionId in executionIds:
                 if executionId not in completedIds:
-                    res = vra.get('/vco/api/actions/runs/' + executionId)
-                    state = res['state']
-                    if state == 'completed':
-                        completedIds.append(executionId)
-                        value = res['value'][res['type']]['value'].split(delimeter)
-                        log = value[0]
-                        err = value[1]
-                        out = value[2].strip()
-                        executionOuts[executionId] = out
-                        print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
-                    elif state == 'failed': raise Exception(res['error'])
+                    res = vra.get('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions/' + executionId + '/state')
+                    state = res['value']
+                    if state != 'running':
+                        res = vra.get('/vco/api/workflows/8368da88-53ff-4285-af9b-c8fcea894901/executions/' + executionId)
+                        if state == 'completed':
+                            completedIds.append(executionId)
+                            value = res['output-parameters'][0]['value']['string']['value'].split(delimeter)
+                            log = value[0]
+                            err = value[1]
+                            out = value[2].strip()
+                            executionOuts[executionId] = out
+                            print('<update instance="{}" resource="scripts">\n<log>{}</log>\n<err>{}</err>\n<out>{}</out>\n</update>'.format(executions[executionId], log, err, out))
+                        elif state == 'failed': raise Exception(res['content-exception'])
             if executionCount == len(completedIds): break
             time.sleep(2)
         else: raise Exception('scripts timeout')

@@ -1,0 +1,40 @@
+{
+	"name": "Address",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"network": {
+			"type": "string",
+			"title": "Network",
+			"recreateOnUpdate": true,
+			"description": "Network id for ip allocation"
+		},
+		"address": {
+			"type": "string",
+			"title": "Address",
+			"default": "",
+			"recreateOnUpdate": true,
+			"description": "Network address specified"
+		}
+	}
+}

@@ -64,8 +64,7 @@ echo "{delimeter}"
 cat /tmp/{id}.output 2>/dev/null
 '''.format(id=id, commands=commands, delimeter=delimeter)
 
-        res = vra.post('/vco/api/actions/8cc62689-ed72-4ad7-afc6-115905681326/executions', {
-            'async-execution': True,
+        res = vra.post('/vco/api/workflows/7f6f952b-3254-4a38-8872-fc3082c01bd5/executions', {
             'parameters': [{
                 'name': 'address',
                 'type': 'string',
@@ -89,22 +88,24 @@ cat /tmp/{id}.output 2>/dev/null
             }]
         })
         
+        executionId = res['id']
         if sync:
-            executionId = res['execution-id']
-            for _ in range(0, 300):
-                res = vra.get('/vco/api/actions/runs/' + executionId)
-                state = res['state']
-                if state == 'completed':
-                    value = res['value'][res['type']]['value'].split(delimeter)
-                    log = value[0]
-                    error = value[1]
-                    output = value[2].strip()
-                    print('<delete resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</delete>'.format(address, port, log, error, output))
-                    break
-                elif state == 'failed': raise Exception(res['error'])
+            for _ in range(0, 450):
+                res = vra.get('/vco/api/workflows/7f6f952b-3254-4a38-8872-fc3082c01bd5/executions/' + executionId + '/state')
+                state = res['value']
+                if state != 'running':
+                    res = vra.get('/vco/api/workflows/7f6f952b-3254-4a38-8872-fc3082c01bd5/executions/' + executionId)
+                    if state == 'completed':
+                        value = res['output-parameters'][0]['value']['string']['value'].split(delimeter)
+                        log = value[0]
+                        error = value[1]
+                        output = value[2].strip()
+                        print('<delete resource="ssh" address="{}" port="{}">\n<log>{}</log>\n<error>{}</error>\n<output>{}</output>\n</delete>'.format(address, port, log, error, output))
+                        break
+                    elif state == 'failed': raise Exception(res['content-exception'])
                 time.sleep(2)
             else: raise Exception('commands timeout')
-    
+
     # publish resource
     return {}
 # __ABX_IMPLEMENTATIONS_END__

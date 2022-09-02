@@ -1,0 +1,90 @@
+{
+	"name": "Scripts",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+			"VraManager"
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"instances": {
+			"type": "array",
+			"title": "Instances",
+			"items": {
+				"type": "string"
+			},
+			"description": "instance array to run scripts"
+		},
+		"osType": {
+			"type": "string",
+			"title": "OS Type",
+			"enum": [
+				"linux",
+				"windows"
+			],
+			"description": "os type to run scripts"
+		},
+		"username": {
+			"type": "string",
+			"title": "Username",
+			"description": "username in vm to run scripts"
+		},
+		"password": {
+			"type": "string",
+			"title": "Password",
+			"encrypted": true,
+			"description": "password in vm to run scripts"
+		},
+		"install": {
+			"type": "string",
+			"title": "Install Scripts",
+			"default": "",
+			"description": "only run script when first deployed"
+		},
+		"configure": {
+			"type": "string",
+			"title": "Configure Scripts",
+			"default": "",
+			"description": "run script when post install and scripts updated"
+		},
+		"destroy": {
+			"type": "string",
+			"title": "Destroy Scripts",
+			"default": "",
+			"description": "run script when destroyed"
+		},
+		"targets": {
+			"type": "array",
+			"title": "Targets",
+			"readOnly": true,
+			"items": {
+				"type": "string"
+			},
+			"default": [
+			]
+		},
+		"outputs": {
+			"type": "string",
+			"title": "Outputs",
+			"readOnly": true,
+			"default": ""
+		}
+	}
+}

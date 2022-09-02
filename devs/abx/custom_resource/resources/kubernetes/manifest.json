@@ -1,0 +1,65 @@
+{
+	"name": "Kubernetes",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"name": {
+			"type": "string",
+			"title": "Name",
+			"description": "Kubernetes Cluster Name"
+		},
+		"clusterType": {
+			"type": "string",
+			"title": "Cluster Type",
+			"enum": [
+				"tanzu",
+				"external"
+			],
+			"description": "Registered Kubernetes Type"
+		},
+		"cluster": {
+			"type": "string",
+			"title": "Cluster ID",
+			"default": "",
+			"description": "Cluster ID in CMX Registered"
+		},
+		"project": {
+			"type": "string",
+			"title": "Project Name",
+			"default": "",
+			"description": "Allocated Project Name of External Cluster"
+		},
+		"kubeConfig": {
+			"type": "string",
+			"title": "Kubernetes Config",
+			"default": "",
+			"description": "Kube-Config of External Cluster"
+		},
+		"clusterManifest": {
+			"type": "string",
+			"title": "Cluster Manifest",
+			"default": "",
+			"description": "Manifest for Initial Cluster Config"
+		}
+	}
+}

@@ -1,0 +1,54 @@
+{
+	"name": "Cert",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+			"VraManager"
+		],
+		"delete": [
+		]
+	},
+	"properties": {
+		"instances": {
+			"type": "array",
+			"title": "Instances",
+			"items": {
+				"type": "string"
+			},
+			"description": "instance array to share cert"
+		},
+		"username": {
+			"type": "string",
+			"title": "Username",
+			"description": "username in vm to share cert"
+		},
+		"password": {
+			"type": "string",
+			"title": "Password",
+			"encrypted": true,
+			"description": "password in vm to share cert"
+		},
+		"keySize": {
+			"type": "number",
+			"title": "Key Size",
+			"default": 2048,
+			"minimum": 1024,
+			"maximum": 8192,
+			"description": "Key Size Bits"
+		}
+	}
+}

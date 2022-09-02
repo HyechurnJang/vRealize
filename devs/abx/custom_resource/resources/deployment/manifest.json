@@ -1,0 +1,63 @@
+{
+	"name": "Deployment",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+		],
+		"update": [
+			"VraManager"
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"name": {
+			"type": "string",
+			"title": "Name",
+			"recreateOnUpdate": true,
+			"description": "Unique name of deployment"
+		},
+		"projectName": {
+			"type": "string",
+			"title": "Project",
+			"recreateOnUpdate": true,
+			"description": "Assigned project"
+		},
+		"itemType": {
+			"type": "string",
+			"title": "Contents Type",
+			"enum": [
+				"blueprint",
+				"catalog"
+			],
+			"recreateOnUpdate": true,
+			"description": "Contents from blueprint or catalog"
+		},
+		"itemName": {
+			"type": "string",
+			"title": "Contents",
+			"recreateOnUpdate": true,
+			"description": "Contents name to deploy"
+		},
+		"inputs": {
+			"type": "object",
+			"title": "Inputs",
+			"default": {
+			},
+			"description": "Inputs parameters to deploy"
+		}
+	}
+}

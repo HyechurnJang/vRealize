@@ -1,0 +1,93 @@
+{
+	"name": "SSH",
+	"inputs": {
+		"create": {
+		},
+		"read": {
+		},
+		"update": {
+		},
+		"delete": {
+		}
+	},
+	"constants": {
+		"create": [
+			"VraManager"
+		],
+		"read": [
+			"VraManager"
+		],
+		"update": [
+			"VraManager"
+		],
+		"delete": [
+			"VraManager"
+		]
+	},
+	"properties": {
+		"address": {
+			"type": "string",
+			"title": "Address",
+			"description": "address to connect host"
+		},
+		"port": {
+			"type": "number",
+			"title": "Port",
+			"default": 22,
+			"description": "port to connect host"
+		},
+		"username": {
+			"type": "string",
+			"title": "Username",
+			"description": "username in host to run scripts"
+		},
+		"password": {
+			"type": "string",
+			"title": "Password",
+			"encrypted": true,
+			"description": "password in host to run scripts"
+		},
+		"sync": {
+			"type": "boolean",
+			"title": "Sync Task",
+			"default": true,
+			"description": "run commands as sync"
+		},
+		"create": {
+			"type": "string",
+			"title": "Create Commands",
+			"default": "",
+			"description": "run script when resource created"
+		},
+		"update": {
+			"type": "string",
+			"title": "Update Commands",
+			"default": "",
+			"description": "run script when resource updated"
+		},
+		"destroy": {
+			"type": "string",
+			"title": "Destroy Scripts",
+			"default": "",
+			"description": "run script when resource destroyed"
+		},
+		"state": {
+			"type": "string",
+			"title": "Task State",
+			"readOnly": true,
+			"default": ""
+		},
+		"executionId": {
+			"type": "string",
+			"title": "Execution ID",
+			"readOnly": true,
+			"default": ""
+		},
+		"output": {
+			"type": "string",
+			"title": "Output",
+			"readOnly": true,
+			"default": ""
+		}
+	}
+}
