@@ -1,21 +1,16 @@
 {
 	"name": "VirtualPrivateZone",
 	"inputs": {
-		"create": {
-		},
-		"read": {
-		},
-		"update": {
-		},
-		"delete": {
-		}
+		"create": {},
+		"read": {},
+		"update": {},
+		"delete": {}
 	},
 	"constants": {
 		"create": [
 			"VraManager"
 		],
-		"read": [
-		],
+		"read": [],
 		"update": [
 			"VraManager"
 		],
@@ -37,19 +32,6 @@
 			},
 			"description": "Compute name list of placement hosts, clusters or resource pools"
 		},
-		"networks": {
-			"type": "array",
-			"title": "Networks",
-			"items": {
-				"type": "string"
-			},
-			"description": "Network id list"
-		},
-		"storage": {
-			"type": "string",
-			"title": "Storage",
-			"description": "Datastore name to deploy"
-		},
 		"folder": {
 			"type": "string",
 			"title": "Folder",
@@ -67,21 +49,63 @@
 			],
 			"description": "Placement policy with 'default', 'binpack' or 'spread'"
 		},
-		"loadBalancers": {
+		"networks": {
 			"type": "array",
-			"title": "Load Balancer",
-			"default": [
-			],
+			"title": "Networks",
 			"items": {
 				"type": "string"
 			},
-			"description": "Load balancer id list"
+			"description": "Network id list"
+		},
+		"transportZone": {
+			"type": "string",
+			"title": "Transport Zone",
+			"default": "",
+			"description": "NSX-T transport zone"
+		},
+		"externalNetwork": {
+			"type": "string",
+			"title": "External Network",
+			"default": "",
+			"description": "External network for on-demand networks"
+		},
+		"tier0Router": {
+			"type": "string",
+			"title": "Tier0 Router",
+			"default": "",
+			"description": "NSX-T tier0 router for on-demand networks"
 		},
 		"edgeCluster": {
 			"type": "string",
 			"title": "Edge Cluster",
 			"default": "",
 			"description": "Edge cluster name to use deployment"
+		},
+		"networkCIDR": {
+			"type": "string",
+			"title": "Network CIDR",
+			"default": "",
+			"description": "Provided CIDR for on-demand networks"
+		},
+		"subnetSize": {
+			"type": "number",
+			"title": "Subnet Size",
+			"default": 24,
+			"description": "Splited size between on-demand networks"
+		},
+		"loadBalancers": {
+			"type": "array",
+			"title": "Load Balancer",
+			"default": [],
+			"items": {
+				"type": "string"
+			},
+			"description": "Load balancer id list"
+		},
+		"storage": {
+			"type": "string",
+			"title": "Storage",
+			"description": "Datastore name to deploy"
 		},
 		"storageType": {
 			"type": "string",

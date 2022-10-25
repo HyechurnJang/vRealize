@@ -1,21 +1,16 @@
 {
 	"name": "Project",
 	"inputs": {
-		"create": {
-		},
-		"read": {
-		},
-		"update": {
-		},
-		"delete": {
-		}
+		"create": {},
+		"read": {},
+		"update": {},
+		"delete": {}
 	},
 	"constants": {
 		"create": [
 			"VraManager"
 		],
-		"read": [
-		],
+		"read": [],
 		"update": [
 			"VraManager"
 		],
@@ -26,26 +21,34 @@
 	"properties": {
 		"name": {
 			"type": "string",
-			"title": "name",
+			"title": "Name",
 			"description": "Unique name of project"
 		},
 		"description": {
 			"type": "string",
-			"title": "description",
+			"title": "Description",
 			"default": "",
 			"description": "Project descriptions"
 		},
+		"catalogs": {
+			"type": "array",
+			"title": "Catalogs",
+			"default": [],
+			"items": {
+				"type": "string"
+			},
+			"description": "Permitted usable catalogs"
+		},
 		"sharedResources": {
 			"type": "boolean",
-			"title": "sharedResources",
+			"title": "Shared Resources",
 			"default": true,
 			"description": "Deployments are shared between all users in the project"
 		},
 		"administrators": {
 			"type": "array",
-			"title": "administrators",
-			"default": [
-			],
+			"title": "Administrators",
+			"default": [],
 			"items": {
 				"type": "string"
 			},
@@ -53,9 +56,8 @@
 		},
 		"members": {
 			"type": "array",
-			"title": "members",
-			"default": [
-			],
+			"title": "Members",
+			"default": [],
 			"items": {
 				"type": "string"
 			},
@@ -63,9 +65,8 @@
 		},
 		"viewers": {
 			"type": "array",
-			"title": "viewers",
-			"default": [
-			],
+			"title": "Viewers",
+			"default": [],
 			"items": {
 				"type": "string"
 			},
@@ -73,9 +74,8 @@
 		},
 		"zones": {
 			"type": "array",
-			"title": "viewers",
-			"default": [
-			],
+			"title": "Zones",
+			"default": [],
 			"items": {
 				"type": "string"
 			},
@@ -83,7 +83,7 @@
 		},
 		"placementPolicy": {
 			"type": "string",
-			"title": "placementPolicy",
+			"title": "Placement Policy",
 			"default": "default",
 			"enum": [
 				"default",
@@ -93,22 +93,28 @@
 		},
 		"customProperties": {
 			"type": "object",
-			"title": "customProperties",
-			"default": {
-			},
+			"title": "Custom Properties",
+			"default": {},
 			"description": "Specify the custom properties that should be added to all requests in this project"
 		},
 		"machineNamingTemplate": {
 			"type": "string",
-			"title": "machineNamingTemplate",
+			"title": "Machine Naming Template",
 			"default": "",
 			"description": "Specify the naming template to be used for machines, networks, security groups and disks provisioned in this project"
 		},
 		"operationTimeout": {
 			"type": "integer",
-			"title": "operationTimeout",
+			"title": "Operation Timeout",
 			"default": 0,
 			"description": "Request timeout seconds"
+		},
+		"policyId": {
+			"type": "string",
+			"title": "Catalog Policy Id",
+			"readOnly": true,
+			"default": "",
+			"description": "Reference of catalog policy"
 		}
 	}
 }
